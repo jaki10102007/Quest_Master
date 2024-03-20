@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 import logging
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"] 
-staffsheet= os.getenv("staffsheet")
-datasheet= os.getenv("datasheet")
+staffsheet= os.getenv("STAFF")
+datasheet= os.getenv("DATA")
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
 credential = Credentials.from_authorized_user_file("token.json", SCOPES)
 logging.info("staffsheet: " + staffsheet)
