@@ -6,12 +6,16 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
+import logging
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"] 
 staffsheet= os.getenv("staffsheet")
 datasheet= os.getenv("datasheet")
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
 credential = Credentials.from_authorized_user_file("token.json", SCOPES)
+logging.info("staffsheet: " + staffsheet)
+logging.info("datasheet: " + datasheet)
+logging.info("SPREADSHEET_ID: " + SPREADSHEET_ID)
 
 def channelid(channel, name):
     credential = Credentials.from_authorized_user_file("token.json", SCOPES)
