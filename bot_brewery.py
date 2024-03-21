@@ -79,8 +79,7 @@ async def on_raw_reaction_add(payload):
         if f"<@{payload.user_id}>" == data[4]:
             print("passed right user")
             print(repr(payload.emoji))
-            emoji = "<PartialEmoji animated=False name='✅' id=None>"
-            if repr(payload.emoji) == emoji:
+            if repr(payload.emoji) == "<PartialEmoji animated=False name='✅' id=None>":
                 print("passed right emoji")
                 print("Reaction added in the target channel")
                 print(payload)
@@ -97,7 +96,7 @@ async def on_raw_reaction_add(payload):
                     logging.info(f"Invalid role at line {line_number}")
 
                 user= data[4]
-                sh.write(data, "Claimed")
+                sh.write(data, "Working")
                 await remove_reaction(payload.channel_id, payload.message_id, "❌")
                 await remove_reaction(payload.channel_id, payload.message_id, "✅")
                 target_channel_id = int("1219030657955794954")  # change to actual channel 
