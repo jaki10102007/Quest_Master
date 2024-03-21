@@ -284,7 +284,7 @@ async def assign(interaction : discord.Interaction, series :str, chapter : str, 
 async def ip(interaction : discord.Interaction):
     if interaction.user.id == 611962086049710120:
         ip = get('https://api.ipify.org').content.decode('utf8')
-        await interaction.response.send_message(ip, emphemeral=True)
+        await interaction.response.send_message(ip, ephemeral=True)
     else:
         await interaction.response.send_message("You are not allowed to use this command")
 bot.run(TOKEN)
