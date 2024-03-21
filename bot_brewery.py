@@ -106,7 +106,7 @@ async def on_raw_reaction_add(payload):
             elif repr(payload.emoji) == "<PartialEmoji animated=False name='🥂' id=None>":
                 print("test")
                 role = None
-                target_channel_id = int("1218705159614631946")  # change to actual channel 
+                target_channel_id = int("1218035430931562591")  # change to actual channel 
                 target_channel = bot.get_channel(target_channel_id)
                 data, row_name = sh.getmessageid(payload.message_id)
                 #data = sheet.getmessageid(payload.message_id)
