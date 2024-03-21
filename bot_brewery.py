@@ -7,6 +7,7 @@ import inspect
 import sys
 from dotenv import load_dotenv
 import os
+from requests import get
 
 load_dotenv()
 TOKEN= os.getenv("TOKEN") # Discord Token
@@ -99,13 +100,16 @@ async def on_raw_reaction_add(payload):
                 sh.write(data, "Working")
                 await remove_reaction(payload.channel_id, payload.message_id, "❌")
                 await remove_reaction(payload.channel_id, payload.message_id, "✅")
-                target_channel_id = int("1219030657955794954")  # change to actual channel 
+                target_channel_id = int("1219030657955794954")  # change to actual channel
+                message = await channel.fetch_message(payload.message_id) 
+                await message.add_reaction("🥂")
                 target_channel = bot.get_channel(target_channel_id)
                 await target_channel.send(f"{series} | CH {chapter} | {role} | sheet updated to status: Accepted by: {user}")
             
             elif repr(payload.emoji) == "<PartialEmoji animated=False name='🥂' id=None>":
                 print("test")
                 role = None
+                await remove_reaction(payload.channel_id, payload.message_id, "🥂")
                 target_channel_id = int("1219030657955794954")  # change to actual channel 
                 target_channel = bot.get_channel(target_channel_id)
                 data, row_name = sh.getmessageid(payload.message_id)
@@ -167,7 +171,6 @@ async def on_member_join(member):
     print(member.name)
     print(member.id)
     sh.findid(member.name, str(member.id))
-    #await channel.send(f"{member} has arrived!")
     
 @bot.tree.command(name="say")
 @app_commands.describe(arg = "what to say")
@@ -192,10 +195,10 @@ async def assign(interaction : discord.Interaction, series :str, chapter :str, r
     if first ==None:
         await interaction.response.send_message(f" '{role.upper()}' is not a valid Role " , ephemeral=True)
     else:
+        await interaction.response.defer(ephemeral=True)
         message =await target_channel.send(f"{series}| CH {chapter} | {role.upper()} | {who}")
         await message.add_reaction("✅")
         await message.add_reaction("❌")
-        await message.add_reaction("🥂")
         #name = sheet.getuser(who)
         print("done")
         print(sh.getuser(who))
@@ -204,6 +207,8 @@ async def assign(interaction : discord.Interaction, series :str, chapter :str, r
         sh.store(message.id, sh.getsheetname(series), chapter, who, first, second)
         #sheet.store(message.id, sheet.getsheetname(series), chapter, sheet.getuser(who), first, second)
         sh.write(list, "Assigned")
+        #await interaction.edit_original_interaction_response(content="Assigned")^
+        await interaction.followup.send(content="Assigned")
         #await interaction.response.send_message("Assigned", ephemeral=True)
 
 @bot.tree.command(name="channel")
@@ -274,4 +279,12 @@ async def assign(interaction : discord.Interaction, series :str, chapter : str, 
         sh.write(list, "Done")
         #await interaction.response.send_message("Send", ephemeral=True)
 
+@bot.tree.command(name= "ip")
+@app_commands.describe()
+async def ip(interaction : discord.Interaction):
+    if interaction.user.id == 611962086049710120:
+        ip = get('https://api.ipify.org').content.decode('utf8')
+        await interaction.response.send_message(ip, emphemeral=True)
+    else:
+        await interaction.response.send_message("You are not allowed to use this command")
 bot.run(TOKEN)
