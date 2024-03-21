@@ -101,9 +101,11 @@ async def on_raw_reaction_add(payload):
                 await remove_reaction(payload.channel_id, payload.message_id, "❌")
                 await remove_reaction(payload.channel_id, payload.message_id, "✅")
                 target_channel_id = int("1219030657955794954")  # change to actual channel
+                
+                target_channel = bot.get_channel(target_channel_id)
+                channel = bot.get_channel(payload.channel_id)
                 message = await channel.fetch_message(payload.message_id) 
                 await message.add_reaction("🥂")
-                target_channel = bot.get_channel(target_channel_id)
                 await target_channel.send(f"{series} | CH {chapter} | {role} | sheet updated to status: Accepted by: {user}")
             
             elif repr(payload.emoji) == "<PartialEmoji animated=False name='🥂' id=None>":
