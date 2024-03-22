@@ -48,6 +48,7 @@ bot = commands.Bot(command_prefix='$', intents=discord.Intents.all())
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
+    logging.info(f'{bot.user} has connected to Discord!')
     try: 
         synced = await bot.tree.sync()
         print(f"Synced {len(synced)} command(s)")
