@@ -7,6 +7,7 @@ import inspect
 import sys
 from dotenv import load_dotenv
 import os
+import sys
 from requests import get
 
 load_dotenv()
@@ -29,7 +30,7 @@ role_dict_reaction = {
     "L": "QC"
 }
 logging.basicConfig(level=logging.INFO)
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 logging.info(f'Test')
 
 line_number = inspect.currentframe().f_lineno
