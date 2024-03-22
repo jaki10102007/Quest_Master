@@ -29,7 +29,7 @@ role_dict_reaction = {
     "L": "QC"
 }
 logging.basicConfig(level=logging.INFO)
-logging.basicConfig(filename='bot_errors.log', level=logging.ERROR)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 log_file_path = os.path.abspath('bot_errors.log')
 logging.info(f'Log file path: {log_file_path}')
 
