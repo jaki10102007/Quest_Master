@@ -30,8 +30,7 @@ role_dict_reaction = {
 }
 logging.basicConfig(level=logging.INFO)
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-log_file_path = os.path.abspath('bot_errors.log')
-logging.info(f'Log file path: {log_file_path}')
+logging.info(f'Test')
 
 line_number = inspect.currentframe().f_lineno
 
