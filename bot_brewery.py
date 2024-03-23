@@ -293,4 +293,13 @@ async def ip(interaction : discord.Interaction):
         await interaction.response.send_message(ip, ephemeral=True)
     else:
         await interaction.response.send_message("You are not allowed to use this command")
+
+@bot.tree.command(name= "logs")
+@app_commands.describe()
+async def logs(interaction : discord.Interaction):
+    if interaction.user.id == 611962086049710120:
+        with open("app.log", "r") as file:
+            await interaction.response.send_message(file.read(), ephemeral=True)
+    else:
+        await interaction.response.send_message("You are not allowed to use this command")
 bot.run(TOKEN)
