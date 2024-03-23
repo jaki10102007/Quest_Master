@@ -30,7 +30,7 @@ role_dict_reaction = {
     "L": "QC"
 }
 logging.basicConfig(level=logging.INFO)
-logging.basicConfig(stream=sys.stderr, level=logging.INFO)
+logging.basicConfig(stream=sys.stderr, level=logging.INFO, filename="app.log")
 logging.info(f'Test')
 
 line_number = inspect.currentframe().f_lineno
