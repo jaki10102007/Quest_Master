@@ -318,7 +318,7 @@ async def ip(interaction: discord.Interaction):
 @app_commands.describe()
 async def logs(interaction: discord.Interaction):
     if interaction.user.id == 611962086049710120:
-        with open("examplelog", "r") as file:
+        with open("example.log", "r") as file:
             await interaction.response.send_message(file.read(), ephemeral=True)
     else:
         await interaction.response.send_message("You are not allowed to use this command")
