@@ -9,7 +9,18 @@ from dotenv import load_dotenv
 import os
 import sys
 from requests import get
+print("Current directory:", os.getcwd())
+logger = logging.getLogger(__name__)
+handler = logging.FileHandler('example.log', 'w', 'utf-8')
+formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
 
+logger.debug('This message should go to the log file')
+logger.info('So should this')
+logger.warning('And this, too')
+logger.error('And non-ASCII stuff, too, like Øresund and Malmö')
 load_dotenv()
 TOKEN= os.getenv("TOKEN") # Discord Token
 print(TOKEN)
@@ -29,9 +40,6 @@ role_dict_reaction = {
     "J": "TS",
     "L": "QC"
 }
-logging.basicConfig(level=logging.INFO)
-logging.basicConfig(stream=sys.stderr, level=logging.INFO, filename="app.log")
-logging.info(f'Test')
 
 line_number = inspect.currentframe().f_lineno
 
