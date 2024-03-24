@@ -95,26 +95,21 @@ async def on_raw_reaction_add(payload):
     if (channel_id == target_channel_id) and payload.user_id != bot_id:
         data, row_name = sh.getmessageid(payload.message_id)
         if f"<@{payload.user_id}>" == data[4]:
-            print(payload.emoji)
-            print(repr(payload.emoji))
-            if repr(payload.emoji) == "<PartialEmoji animated=False name='✅' id=None>":
+            emoji_repr = repr(payload.emoji)
+            role = data[2]
+            if emoji_repr == "<PartialEmoji animated=False name='✅' id=None>":
                 await remove_reaction(payload.channel_id, payload.message_id, "❌", True)
                 await remove_reaction(payload.channel_id, payload.message_id, "✅", True)
                 await reactionhelper(data, assignmentlog, "Working")
-            elif repr(payload.emoji) == "<PartialEmoji animated=False name='🥂' id=None>":
-                data, row_name = sh.getmessageid(payload.message_id)
-                role = data[2]
+            elif emoji_repr == "<PartialEmoji animated=False name='🥂' id=None>":
                 if role in role_dict_reaction:
                     role = role_dict_reaction[role]
-                target_channel = bot.get_channel(1219030657955794954)  # ID of the done channel
-                await target_channel.send(f"{sh.getchannelid(data[0])} | CH {data[1]} | {role} | Done | {data[4]}")
+                await assignmentlog.send(f"{sh.getchannelid(data[0])} | CH {data[1]} | {role} | Done | {data[4]}")
                 sh.write(data, "Done")
                 sh.delete_row(row_name)  # clear message data
                 await remove_reaction(payload.channel_id, payload.message_id, "🥂", False)
 
             else:
-                data, row_name = sh.getmessageid(payload.message_id)
-                role = data[2]
                 await reactionhelper(data, assignmentlog, "Declined")
                 await delete_message(payload.channel_id, payload.message_id)
                 sh.delete_row(row_name)  # clear

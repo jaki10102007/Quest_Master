@@ -145,18 +145,18 @@ def write(data, status):
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
-        print(data)
+
         value = sheets.values().get(spreadsheetId=datasheet, range=f"{sheet2}!A:A").execute()
-        print(value)
+
         for i, row in enumerate(value['values'], start=1):
             if row and row[0] == ch:
                 ch = i
-        print(user)
+
         value = sheets.values().get(spreadsheetId=datasheet, range=f"{sheet2}!{f}{ch}:{se}{ch}").execute()
         sheets.values().update(spreadsheetId=datasheet, range=f"{sheet2}!{f}{ch}:{se}{ch}",
                                valueInputOption="USER_ENTERED", body={'values': [[getuser(user), status]]}).execute()
     except HttpError as error:
-        print(error)
+        logging.error(error)
 
 
 def store(message_id, sheet, ch, user, f, se):
@@ -168,7 +168,7 @@ def store(message_id, sheet, ch, user, f, se):
                                valueInputOption="USER_ENTERED",
                                body={'values': [[str(message_id), sheet, ch, f, se, str(user)]]}).execute()
     except HttpError as error:
-        print(error)
+        logging.error(error)
 
 
 def writechannel(channel_id, sheet):
