@@ -9,7 +9,6 @@ import os
 import sys
 from requests import get
 
-print("Current directory:", os.getcwd())
 logger = logging.getLogger(__name__)
 handler = logging.FileHandler('example.log', 'w', 'utf-8')
 formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
@@ -17,13 +16,8 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
-logger.debug('This message should go to the log file')
-logger.info('So should this')
-logger.warning('And this, too')
-logger.error('And non-ASCII stuff, too, like Øresund and Malmö')
 load_dotenv()
 TOKEN = os.getenv("TOKEN")  # Discord Token
-print(TOKEN)
 role_dict = {
     "RP": ("B", "C"),
     "TL": ("D", "E"),
@@ -49,7 +43,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         return
 
-    logging.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+    logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
 
 
 sys.excepthook = handle_exception
@@ -59,19 +53,20 @@ bot = commands.Bot(command_prefix='$', intents=discord.Intents.all())
 
 @bot.event
 async def on_ready():
-    print(f'{bot.user} has connected to Discord!')
-    logging.info(f'{bot.user} has connected to Discord!')
+    logger.info(f'{bot.user} has connected to Discord!')
     try:
         synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} command(s)")
+        logger.info(f"Synced {len(synced)} command(s)")
     except Exception as e:
-        print(e)
+        logger.error(e)
 
 
-async def remove_reaction(channel_id, message_id, emoji):
+async def remove_reaction(channel_id, message_id, emoji, add):
     channel = bot.get_channel(channel_id)
     message = await channel.fetch_message(message_id)
     await message.clear_reaction(emoji)
+    if add:
+        await message.add_reaction("🥂")
 
 
 async def delete_message(channel_id, message_id):
@@ -82,99 +77,47 @@ async def delete_message(channel_id, message_id):
     await message.delete()
 
 
+async def reactionhelper(data, assignmentlog, status):
+    role = data[2]
+    if role in role_dict_reaction:
+        role = role_dict_reaction[role]
+    sh.write(data, status)
+    await assignmentlog.send(
+        f"{sh.getchannelid(data[0])} | CH {data[1]} | {role} | sheet updated to status: {status} by: {data[4]}")
+
+
 @bot.event
 async def on_raw_reaction_add(payload):
-    print(payload.emoji)
+    assignmentlog = bot.get_channel(1219030657955794954)
     channel_id = payload.channel_id
-    target_channel_id = 1218705159614631946
-    if (channel_id == target_channel_id) and payload.user_id != 1218682240947458129:
-        print("Passed channel and not bot ")
+    target_channel_id = 1218705159614631946  # only checks the assignment channel
+    bot_id = 1218682240947458129  # id of the bot
+    if (channel_id == target_channel_id) and payload.user_id != bot_id:
         data, row_name = sh.getmessageid(payload.message_id)
-        print(data[4])
-        print(payload.user_id)
         if f"<@{payload.user_id}>" == data[4]:
-            print("passed right user")
+            print(payload.emoji)
             print(repr(payload.emoji))
             if repr(payload.emoji) == "<PartialEmoji animated=False name='✅' id=None>":
-                print("passed right emoji")
-                print("Reaction added in the target channel")
-                print(payload)
-                # data, row_name = sheet.getmessageid(payload.message_id)
-                # data = sheet.getmessageid(payload.message_id)
-                print(data)
-                series = sh.getchannelid(data[0])
-                # series = datatest.get_key("channel.json", data[0])
-                chapter = data[1]
-                role = data[2]
-                if role in role_dict_reaction:
-                    role = role_dict_reaction[role]
-                else:
-                    logging.info(f"Invalid role at line {line_number}")
-
-                user = data[4]
-                sh.write(data, "Working")
-                await remove_reaction(payload.channel_id, payload.message_id, "❌")
-                await remove_reaction(payload.channel_id, payload.message_id, "✅")
-                target_channel_id = int("1219030657955794954")  # change to actual channel
-
-                target_channel = bot.get_channel(target_channel_id)
-                channel = bot.get_channel(payload.channel_id)
-                message = await channel.fetch_message(payload.message_id)
-                await message.add_reaction("🥂")
-                await target_channel.send(
-                    f"{series} | CH {chapter} | {role} | sheet updated to status: Accepted by: {user}")
-
+                await remove_reaction(payload.channel_id, payload.message_id, "❌", True)
+                await remove_reaction(payload.channel_id, payload.message_id, "✅", True)
+                await reactionhelper(data, assignmentlog, "Working")
             elif repr(payload.emoji) == "<PartialEmoji animated=False name='🥂' id=None>":
-                print("test")
-                role = None
-                await remove_reaction(payload.channel_id, payload.message_id, "🥂")
-                target_channel_id = int("1219030657955794954")  # change to actual channel 
-                target_channel = bot.get_channel(target_channel_id)
                 data, row_name = sh.getmessageid(payload.message_id)
-                # data = sheet.getmessageid(payload.message_id)
-                series = sh.getchannelid(data[0])
-                # series = datatest.get_key("channel.json", data[0])
-                chapter = data[1]
                 role = data[2]
                 if role in role_dict_reaction:
                     role = role_dict_reaction[role]
-                else:
-                    logging.info(f"Invalid role at line {line_number}")
-
-                user = data[4]
-                print("this is series")
-                print(series)
-                print(role)
-                await target_channel.send(f"{series} | CH {chapter} | {role} | Done | {user}")
-                # await delete_message(payload.channel_id, payload.message_id)
+                target_channel = bot.get_channel(1219030657955794954)  # ID of the done channel
+                await target_channel.send(f"{sh.getchannelid(data[0])} | CH {data[1]} | {role} | Done | {data[4]}")
                 sh.write(data, "Done")
-                sh.delete_row(row_name)  # clear
-
+                sh.delete_row(row_name)  # clear message data
+                await remove_reaction(payload.channel_id, payload.message_id, "🥂", False)
 
             else:
-                target_channel_id = int("1219030657955794954")  # Replace with the ID of the target channel
-                target_channel = bot.get_channel(target_channel_id)
                 data, row_name = sh.getmessageid(payload.message_id)
-                # data = sheet.getmessageid(payload.message_id)
-                series = sh.getchannelid(data[0])
-                # series = datatest.get_key("channel.json", data[0])
-                chapter = data[1]
                 role = data[2]
-                if role in role_dict_reaction:
-                    role = role_dict_reaction[role]
-                else:
-                    logging.info(f"Invalid role at line {line_number}")
-
-                user = data[4]
-
-                sh.write(data, "Declined")
-                await target_channel.send(
-                    f"{series} | CH {chapter} | {role} | sheet updated to status: Declined by: {user}")
+                await reactionhelper(data, assignmentlog, "Declined")
                 await delete_message(payload.channel_id, payload.message_id)
-                print(row_name)
                 sh.delete_row(row_name)  # clear
-    else:
-        print("Wrong channel")
 
 
 @bot.tree.command(name="findid")
@@ -186,9 +129,6 @@ async def findid(interaction: discord.Interaction, user: discord.User):
 
 @bot.event
 async def on_member_join(member):
-    print("new member")
-    print(member.name)
-    print(member.id)
     sh.findid(member.name, str(member.id))
 
 
@@ -202,41 +142,30 @@ async def say(interaction: discord.Interaction, arg: str):
 @bot.tree.command(name="assign")
 @app_commands.describe(series="# of the series", chapter="What chapter", role="What needs to be done", who="Who")
 async def assign(interaction: discord.Interaction, series: str, chapter: str, role: str, who: str):
-    print("assign")
-    first = None
-    second = None
     target_channel_id = int("1218705159614631946")  # Replace with the ID of the target channel
     target_channel = bot.get_channel(target_channel_id)
     role = role.upper()
+    first = None
+    second = None
     if role.upper() in role_dict:
         first, second = role_dict[role]
-        print(first)
-        print(second)
-    if first == None:
+    if first is None:
         await interaction.response.send_message(f" '{role.upper()}' is not a valid Role ", ephemeral=True)
     else:
         await interaction.response.defer(ephemeral=True)
-        message = await target_channel.send(f"{series}| CH {chapter} | {role.upper()} | {who}")
+        message = await target_channel.send(f"{series}| CH {chapter} | {role} | {who}")
+        data = [sh.getsheetname(series), chapter, first, second, who]
+        sh.store(message.id, data[0], chapter, who, first, second)
+        sh.write(data, "Assigned")
+        await interaction.followup.send(content="Assigned")
         await message.add_reaction("✅")
         await message.add_reaction("❌")
-        # name = sheet.getuser(who)
-        print("done")
-        print(sh.getuser(who))
-        print(sh.getsheetname(series))
-        list = [sh.getsheetname(series), chapter, first, second, who]
-        sh.store(message.id, sh.getsheetname(series), chapter, who, first, second)
-        # sheet.store(message.id, sheet.getsheetname(series), chapter, sheet.getuser(who), first, second)
-        sh.write(list, "Assigned")
-        # await interaction.edit_original_interaction_response(content="Assigned")^
-        await interaction.followup.send(content="Assigned")
-        # await interaction.response.send_message("Assigned", ephemeral=True)
 
 
 @bot.tree.command(name="channel")
 @app_commands.describe(channel="# of the channel", sheet="Name of the sheet")
 async def channel(interaction: discord.Interaction, channel: str, sheet: str):
     await interaction.response.send_message(f"{channel} was assigned to {sheet}")
-    print(channel)
     # datatest.add_to_json_file('channel.json', sheet, channel)
     sh.writechannel(channel, sheet)
 
@@ -285,15 +214,13 @@ async def assign(interaction: discord.Interaction, series: str, chapter: str, ro
     target_channel_id = int("1218705159614631946")  # change to actual channel 
     target_channel = bot.get_channel(target_channel_id)
     user = interaction.user.id
-    print("now comes user bevore check")
-    print(user)
 
     role = role.upper()
     if role.upper() in role_dict:
         first, second = role_dict[role]
     if first == None:
         if target_channel is None:
-            print("Target channel is None")
+            logger.error("Done command used with invalid role")
         else:
             await interaction.response.send_message(f" '{role.upper()}' is not a valid Role ", ephemeral=True)
     else:
@@ -317,11 +244,8 @@ async def ip(interaction: discord.Interaction):
 @bot.tree.command(name="logs")
 @app_commands.describe()
 async def logs(interaction: discord.Interaction):
-    if interaction.user.id == 611962086049710120:
-        with open("example.log", "r") as file:
-            await interaction.response.send_message(file.read(), ephemeral=True)
-    else:
-        await interaction.response.send_message("You are not allowed to use this command")
+    with open("example.log", "r") as file:
+        await interaction.response.send_message(file.read(), ephemeral=True)
 
 
 bot.run(TOKEN)
