@@ -29,7 +29,7 @@ def channelid(channel, name):
                                valueInputOption="USER_ENTERED", body={'values': [
                 [name, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", id]]}).execute()
     except HttpError as error:
-        print(error)
+        logging.error(error)
 
 
 def copy(name):
@@ -68,7 +68,7 @@ def copy(name):
         #    body={'values': [[name, "","","","","","","","","","","","","","","","","", "","", "", ids]]}
         # ).execute()
     except HttpError as error:
-        print(error)
+        logging.error(error)
 
 
 def findid(name, ids):
@@ -82,8 +82,6 @@ def findid(name, ids):
         # else:
         #    idd=ids
         # idd=ids
-        # print(idd)üß
-        print(type(ids))
         # value= sheets.values().get(spreadsheetId=staffsheet, range=f"T:T").execute()
         sheets.values().append(spreadsheetId=staffsheet, insertDataOption="INSERT_ROWS", range=f"3:3",
                                valueInputOption="USER_ENTERED", body={'values': [
@@ -91,7 +89,7 @@ def findid(name, ids):
         # sheets.values().append(spreadsheetId=staffsheet, insertDataOption="INSERT_ROWS" , range=f"T13:T13", valueInputOption="USER_ENTERED", body={'values': [[ids]]}).execute()
 
     except HttpError as error:
-        print(error)
+        logging.error(error)
 
 
 def getuser(name):
@@ -102,17 +100,14 @@ def getuser(name):
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
         value = sheets.values().get(spreadsheetId=staffsheet, range=f"V:V").execute()
-        print(value)
-        print(name)
         for i, row in enumerate(value['values'], start=1):
             if row and f"<@{row[0]}>" == f"{name}":
                 name = i
 
         creditname = sheets.values().get(spreadsheetId=staffsheet, range=f"C{name}:C{name}").execute()
-        print(creditname)
         return creditname["values"][0][0]
     except HttpError as error:
-        print(error)
+        logging.error(error)
 
 
 def getmessageid(id):
@@ -122,22 +117,19 @@ def getmessageid(id):
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
         value = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!F:F").execute()
-        # print(value)
         for i, row in enumerate(value['values'], start=1):
             if row and f"{row[0]}" == f"{id}":
                 name = i
-                print(i)
         if name is not None:
             data = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!G{name}:K{name}").execute()
-            print(data)
             return data["values"][0], name
     except HttpError as error:
-        print(error)
+        logging.error(error)
 
 
 def write(data, status):
     sheet_name = data[0]
-    chapter = float(data[1])
+    chapter = data[1]
     chapter_index = None
     chapter_found = False
     first = data[2]
@@ -158,12 +150,8 @@ def write(data, status):
             # Check if the previous chapter rounded equals the current chapter
             # and if the previous chapter plus one equals the current chapter
             prev_chapter = float(value['values'][len(value['values']) - 1][0]) if value['values'] else 0  # Ensure prev_chapter is an integer
-            print(prev_chapter)
-            print(chapter)
-            print(prev_chapter+1)
             math.floor(prev_chapter)
-            if math.ceil(prev_chapter)== chapter or prev_chapter == math.floor(chapter):
-                print("Passed chapter test")
+            if math.ceil(float(prev_chapter)) ==  math.floor(float(chapter)) or math.floor(float(prev_chapter)) == math.floor(float(chapter)) or int(prev_chapter)+1 == int(chapter):
                 chapter_index = len(value['values']) + 1
                 sheets.values().append(spreadsheetId=datasheet, range=f"{sheet_name}!A{chapter_index}:A{chapter_index}",
                                        insertDataOption="INSERT_ROWS", valueInputOption="USER_ENTERED",
@@ -204,7 +192,7 @@ def writechannel(channel_id, sheet):
         sheets.values().append(spreadsheetId=datasheet, insertDataOption="INSERT_ROWS", range=f"CHANNELS!3:3",
                                valueInputOption="USER_ENTERED", body={'values': [[channel_id, sheet]]}).execute()
     except HttpError as error:
-        print(error)
+        logging.error(error)
 
 
 def updatesheet(channel_id, sheet):
@@ -215,7 +203,6 @@ def updatesheet(channel_id, sheet):
         sheets = service.spreadsheets()
 
         value = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!A:A").execute()
-        print(value)
         for i, row in enumerate(value['values'], start=1):
             if row and row[0] == f"{channel_id}":
                 row = i
@@ -223,7 +210,7 @@ def updatesheet(channel_id, sheet):
         sheets.values().update(spreadsheetId=datasheet, range=f"CHANNELS!{row}:{row}", valueInputOption="USER_ENTERED",
                                body={'values': [[channel_id, sheet]]}).execute()
     except HttpError as error:
-        print(error)
+        logging.error(error)
 
 
 def updatechannel_id(channel_id, sheet):
@@ -234,7 +221,6 @@ def updatechannel_id(channel_id, sheet):
         sheets = service.spreadsheets()
 
         value = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!B:B").execute()
-        print(value)
         for i, row in enumerate(value['values'], start=1):
             if row and row[0] == f"{sheet}":
                 row = i
@@ -242,7 +228,7 @@ def updatechannel_id(channel_id, sheet):
         sheets.values().update(spreadsheetId=datasheet, range=f"CHANNELS!{row}:{row}", valueInputOption="USER_ENTERED",
                                body={'values': [[channel_id, sheet]]}).execute()
     except HttpError as error:
-        print(error)
+        logging.error(error)
 
 
 def getsheetname(channel_id):
@@ -258,7 +244,7 @@ def getsheetname(channel_id):
         name = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!B{rowd}:B{rowd}").execute()
         return name["values"][0][0]
     except HttpError as error:
-        print(error)
+        logging.error(error)
 
 
 def getchannelid(sheet):
@@ -274,7 +260,7 @@ def getchannelid(sheet):
         name = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!A{rowd}:A{rowd}").execute()
         return name["values"][0][0]
     except HttpError as error:
-        print(error)
+        logging.error(error)
 
 
 def delete_row(row_index):

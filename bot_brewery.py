@@ -143,7 +143,7 @@ async def assign(interaction: discord.Interaction, series: str, chapter: str, ro
     first = None
     second = None
     if role.upper() in role_dict:
-        first, second = role_dict[role]
+        first, second = role_dict[role.upper()]
     if first is None:
         await interaction.response.send_message(f" '{role.upper()}' is not a valid Role ", ephemeral=True)
     else:
@@ -155,6 +155,31 @@ async def assign(interaction: discord.Interaction, series: str, chapter: str, ro
         await interaction.followup.send(content="Assigned")
         await message.add_reaction("✅")
         await message.add_reaction("❌")
+
+@bot.tree.command(name="bulkassign")
+@app_commands.describe(series="# of the series", start_chapter="start chapter",end_chapter="end chapter", role="What needs to be done", who="Who")
+async def bulkassign(interaction: discord.Interaction, series: str, start_chapter: int, end_chapter: int, role: str, who: str):
+    target_channel_id = int("1218705159614631946")  # Replace with the ID of the target channel
+    target_channel = bot.get_channel(target_channel_id)
+    role = role.upper()
+    first = None
+    second = None
+    await interaction.response.defer(ephemeral=True)
+    if role.upper() in role_dict:
+        first, second = role_dict[role.upper()]
+    if first is None:
+        await interaction.response.send_message(f" '{role.upper()}' is not a valid Role ", ephemeral=True)
+    else:
+        for x in range(start_chapter, end_chapter +1):
+            chapter = str(x)
+            message = await target_channel.send(f"{series}| CH {chapter} | {role} | {who}")
+            data = [sh.getsheetname(series), chapter, first, second, who]
+            sh.store(message.id, data[0], chapter, who, first, second)
+            sh.write(data, "Assigned")
+
+            await message.add_reaction("✅")
+            await message.add_reaction("❌")
+    await interaction.followup.send(content="Assigned")
 
 
 @bot.tree.command(name="channel")
