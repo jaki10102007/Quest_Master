@@ -137,6 +137,7 @@ def getmessageid(id):
 def write(data, status):
     sheet2 = data[0]
     ch = data[1]
+    chnew = None
     f = data[2]
     se = data[3]
     user = data[4]
@@ -148,10 +149,14 @@ def write(data, status):
 
         value = sheets.values().get(spreadsheetId=datasheet, range=f"{sheet2}!A:A").execute()
 
-        for i, row in enumerate(value['values'], start=1):
+        for i, row in enumerate(value['values'], start=0):
             if row and row[0] == ch:
-                ch = i
-
+                chnew = i
+            if chnew is None:
+                chnew = i+1
+                sheets.values.append(spreadsheetId=datasheet, range=f"{sheet2}!{f}1:{se}1", insertDataOption="INSERT_ROWS",
+                                valueInputOption="USER_ENTERED",
+                                body={'values': [[]]}).execute()
         value = sheets.values().get(spreadsheetId=datasheet, range=f"{sheet2}!{f}{ch}:{se}{ch}").execute()
         sheets.values().update(spreadsheetId=datasheet, range=f"{sheet2}!{f}{ch}:{se}{ch}",
                                valueInputOption="USER_ENTERED", body={'values': [[getuser(user), status]]}).execute()
