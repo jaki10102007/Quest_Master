@@ -7,7 +7,7 @@ from googleapiclient.discovery import build
 from dotenv import load_dotenv
 import logging
 import math
-
+#command
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 load_dotenv()
 staffsheet = os.getenv("STAFF")
