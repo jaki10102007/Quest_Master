@@ -6,6 +6,7 @@ from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
 import logging
+import math
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 load_dotenv()
@@ -135,33 +136,50 @@ def getmessageid(id):
 
 
 def write(data, status):
-    sheet2 = data[0]
-    ch = data[1]
-    chnew = None
-    f = data[2]
-    se = data[3]
+    sheet_name = data[0]
+    chapter = float(data[1])
+    chapter_index = None
+    chapter_found = False
+    first = data[2]
+    second = data[3]
     user = data[4]
     checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
+        value = sheets.values().get(spreadsheetId=datasheet, range=f"{sheet_name}!A:A").execute()
 
-        value = sheets.values().get(spreadsheetId=datasheet, range=f"{sheet2}!A:A").execute()
+        for i, row in enumerate(value['values'], start=1):
+            if row and row[0] == chapter:
+                chapter_index = i
+                chapter_found = True
+        if not chapter_found:
+            # Check if the previous chapter rounded equals the current chapter
+            # and if the previous chapter plus one equals the current chapter
+            prev_chapter = float(value['values'][len(value['values']) - 1][0]) if value['values'] else 0  # Ensure prev_chapter is an integer
+            print(prev_chapter)
+            print(chapter)
+            print(prev_chapter+1)
+            math.floor(prev_chapter)
+            if math.ceil(prev_chapter)== chapter or prev_chapter == math.floor(chapter):
+                print("Passed chapter test")
+                chapter_index = len(value['values']) + 1
+                sheets.values().append(spreadsheetId=datasheet, range=f"{sheet_name}!A{chapter_index}:A{chapter_index}",
+                                       insertDataOption="INSERT_ROWS", valueInputOption="USER_ENTERED",
+                                       body={'values': [[chapter]]}).execute()
+        if chapter_index is not None:
+            value = sheets.values().get(spreadsheetId=datasheet,
+                                        range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}").execute()
+            sheets.values().update(spreadsheetId=datasheet,
+                                   range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}",
+                                   valueInputOption="USER_ENTERED",
+                                   body={'values': [[getuser(user), status]]}).execute()
 
-        for i, row in enumerate(value['values'], start=0):
-            if row and row[0] == ch:
-                chnew = i
-            if chnew is None:
-                chnew = i+1
-                sheets.values.append(spreadsheetId=datasheet, range=f"{sheet2}!{f}1:{se}1", insertDataOption="INSERT_ROWS",
-                                valueInputOption="USER_ENTERED",
-                                body={'values': [[]]}).execute()
-        value = sheets.values().get(spreadsheetId=datasheet, range=f"{sheet2}!{f}{ch}:{se}{ch}").execute()
-        sheets.values().update(spreadsheetId=datasheet, range=f"{sheet2}!{f}{ch}:{se}{ch}",
-                               valueInputOption="USER_ENTERED", body={'values': [[getuser(user), status]]}).execute()
+
+
     except HttpError as error:
-        logging.error(error)
+        logging.error(f"An error occurred: {error}")
 
 
 def store(message_id, sheet, ch, user, f, se):
@@ -289,7 +307,6 @@ def checkcred():
             credential = flow.run_local_server(port=0)
             with open("token.json", "w") as token:
                 token.write(credential.to_json())
-
 
 
 checkcred()
