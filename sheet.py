@@ -19,7 +19,7 @@ logging.info("datasheet: " + datasheet)
 logging.info("SPREADSHEET_ID: " + SPREADSHEET_ID)
 
 
-def channelid(channel, name):
+async def channelid(channel, name):
     credential = Credentials.from_authorized_user_file("token.json", SCOPES)
 
     try:
@@ -32,8 +32,8 @@ def channelid(channel, name):
         logging.error(error)
 
 
-def copy(name):
-    checkcred()
+async def copy(name):
+    await checkcred()
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
@@ -71,8 +71,8 @@ def copy(name):
         logging.error(error)
 
 
-def findid(name, ids):
-    checkcred()
+async def findid(name, ids):
+    await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -92,9 +92,9 @@ def findid(name, ids):
         logging.error(error)
 
 
-def getuser(name):
+async def getuser(name):
     sheet = "STAFF"
-    checkcred()
+    await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -110,9 +110,9 @@ def getuser(name):
         logging.error(error)
 
 
-def getmessageid(id):
+async def getmessageid(id):
     name = None
-    checkcred()
+    await checkcred()
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
@@ -127,7 +127,7 @@ def getmessageid(id):
         logging.error(error)
 
 
-def write(data, status):
+async def write(data, status):
     sheet_name = data[0]
     chapter = data[1]
     chapter_index = None
@@ -135,7 +135,7 @@ def write(data, status):
     first = data[2]
     second = data[3]
     user = data[4]
-    checkcred()
+    await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -162,7 +162,7 @@ def write(data, status):
             sheets.values().update(spreadsheetId=datasheet,
                                    range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}",
                                    valueInputOption="USER_ENTERED",
-                                   body={'values': [[getuser(user), status]]}).execute()
+                                   body={'values': [[await getuser(user), status]]}).execute()
 
 
 
@@ -170,8 +170,8 @@ def write(data, status):
         logging.error(f"An error occurred: {error}")
 
 
-def store(message_id, sheet, ch, user, f, se):
-    checkcred()
+async def store(message_id, sheet, ch, user, f, se):
+    await checkcred()
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
@@ -182,8 +182,8 @@ def store(message_id, sheet, ch, user, f, se):
         logging.error(error)
 
 
-def writechannel(channel_id, sheet):
-    checkcred()
+async def writechannel(channel_id, sheet):
+    await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -195,8 +195,8 @@ def writechannel(channel_id, sheet):
         logging.error(error)
 
 
-def updatesheet(channel_id, sheet):
-    checkcred()
+async def updatesheet(channel_id, sheet):
+    await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -213,8 +213,8 @@ def updatesheet(channel_id, sheet):
         logging.error(error)
 
 
-def updatechannel_id(channel_id, sheet):
-    checkcred()
+async def updatechannel_id(channel_id, sheet):
+    await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -231,8 +231,8 @@ def updatechannel_id(channel_id, sheet):
         logging.error(error)
 
 
-def getsheetname(channel_id):
-    checkcred()
+async def getsheetname(channel_id):
+    await checkcred()
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
@@ -247,8 +247,8 @@ def getsheetname(channel_id):
         logging.error(error)
 
 
-def getchannelid(sheet):
-    checkcred()
+async def getchannelid(sheet):
+    await checkcred()
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
@@ -263,8 +263,8 @@ def getchannelid(sheet):
         logging.error(error)
 
 
-def delete_row(row_index):
-    checkcred()
+async def delete_row(row_index):
+    await checkcred()
     service = build("sheets", "v4", credentials=credential)
     sheets = service.spreadsheets()
     sheets.values().update(spreadsheetId=datasheet, range=f"DATA!{row_index}:{row_index}",
@@ -272,7 +272,7 @@ def delete_row(row_index):
             ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]]}).execute()
 
 
-def get_sheet_id_by_name(spreadsheet_id, sheet_name):
+async def get_sheet_id_by_name(spreadsheet_id, sheet_name):
     service = build('sheets', 'v4', credentials=credential)
     spreadsheet = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
     for sheet in spreadsheet['sheets']:
@@ -282,7 +282,7 @@ def get_sheet_id_by_name(spreadsheet_id, sheet_name):
 
 # get_sheet_id_by_name(datasheet, "DATA")
 
-def checkcred():
+async def checkcred():
     if os.path.exists("token.json"):
         credential = Credentials.from_authorized_user_file("token.json", SCOPES)
     if not credential or not credential.valid:
@@ -295,4 +295,3 @@ def checkcred():
                 token.write(credential.to_json())
 
 
-checkcred()
