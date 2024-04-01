@@ -1,26 +1,31 @@
 import os
 from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
+#from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
 import logging
 import math
+from google.oauth2.service_account import Credentials
+from google.oauth2 import service_account
 #command
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+
 load_dotenv()
 staffsheet = os.getenv("STAFF")
 datasheet = os.getenv("DATA")
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
-credential = Credentials.from_authorized_user_file("token.json", SCOPES)
+#credential = Credentials.from_authorized_user_file("token.json", SCOPES)
+credential = Credentials.from_service_account_file('service_account.json', scopes=SCOPES)
+credential = service_account.Credentials.from_service_account_file(
+        "service_account.json", scopes=SCOPES)
 logging.info("staffsheet: " + staffsheet)
 logging.info("datasheet: " + datasheet)
 logging.info("SPREADSHEET_ID: " + SPREADSHEET_ID)
 
 
 async def channelid(channel, name):
-    credential = Credentials.from_authorized_user_file("token.json", SCOPES)
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -33,7 +38,6 @@ async def channelid(channel, name):
 
 
 async def copy(name):
-    await checkcred()
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
@@ -72,7 +76,7 @@ async def copy(name):
 
 
 async def findid(name, ids):
-    await checkcred()
+    #await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -94,7 +98,7 @@ async def findid(name, ids):
 
 async def getuser(name):
     sheet = "STAFF"
-    await checkcred()
+    #await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -112,7 +116,7 @@ async def getuser(name):
 
 async def getmessageid(id):
     name = None
-    await checkcred()
+    #await checkcred()
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
@@ -135,7 +139,7 @@ async def write(data, status):
     first = data[2]
     second = data[3]
     user = data[4]
-    await checkcred()
+    #await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -171,7 +175,7 @@ async def write(data, status):
 
 
 async def store(message_id, sheet, ch, user, f, se):
-    await checkcred()
+    #await checkcred()
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
@@ -183,7 +187,7 @@ async def store(message_id, sheet, ch, user, f, se):
 
 
 async def writechannel(channel_id, sheet):
-    await checkcred()
+    #await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -196,7 +200,7 @@ async def writechannel(channel_id, sheet):
 
 
 async def updatesheet(channel_id, sheet):
-    await checkcred()
+    #await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -214,7 +218,7 @@ async def updatesheet(channel_id, sheet):
 
 
 async def updatechannel_id(channel_id, sheet):
-    await checkcred()
+    #await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -232,7 +236,7 @@ async def updatechannel_id(channel_id, sheet):
 
 
 async def getsheetname(channel_id):
-    await checkcred()
+    #await checkcred()
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
@@ -248,7 +252,7 @@ async def getsheetname(channel_id):
 
 
 async def getchannelid(sheet):
-    await checkcred()
+    #await checkcred()
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
@@ -264,7 +268,7 @@ async def getchannelid(sheet):
 
 
 async def delete_row(row_index):
-    await checkcred()
+    #await checkcred()
     service = build("sheets", "v4", credentials=credential)
     sheets = service.spreadsheets()
     sheets.values().update(spreadsheetId=datasheet, range=f"DATA!{row_index}:{row_index}",
@@ -281,16 +285,4 @@ async def get_sheet_id_by_name(spreadsheet_id, sheet_name):
 
 
 # get_sheet_id_by_name(datasheet, "DATA")
-
-async def checkcred():
-    if os.path.exists("token.json"):
-        credential = Credentials.from_authorized_user_file("token.json", SCOPES)
-    if not credential or not credential.valid:
-        if credential and credential.expired and credential.refresh_token:
-            credential.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-            credential = flow.run_local_server(port=0)
-            with open("token.json", "w") as token:
-                token.write(credential.to_json())
 
