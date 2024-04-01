@@ -294,4 +294,3 @@ async def checkcred():
             with open("token.json", "w") as token:
                 token.write(credential.to_json())
 
-

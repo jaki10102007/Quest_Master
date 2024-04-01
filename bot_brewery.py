@@ -15,7 +15,6 @@ formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
-
 load_dotenv()
 TOKEN = os.getenv("TOKEN")  # Discord Token
 role_dict = {
