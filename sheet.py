@@ -1,6 +1,6 @@
 import os
 from google.auth.transport.requests import Request
-#from google.oauth2.credentials import Credentials
+# from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
@@ -24,18 +24,18 @@ load_dotenv()
 staffsheet = os.getenv("STAFF")
 datasheet = os.getenv("DATA")
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
-#credential = Credentials.from_authorized_user_file("token.json", SCOPES)
+# credential = Credentials.from_authorized_user_file("token.json", SCOPES)
 credential = Credentials.from_service_account_file('service_account.json', scopes=SCOPES)
 credential = service_account.Credentials.from_service_account_file(
-        "service_account.json", scopes=SCOPES)
+    "service_account.json", scopes=SCOPES)
 logging.info("staffsheet: " + staffsheet)
 logging.info("datasheet: " + datasheet)
 logging.info("SPREADSHEET_ID: " + SPREADSHEET_ID)
 service = build("sheets", "v4", credentials=credential)
 sheets = service.spreadsheets()
 
-async def channelid(channel, name):
 
+async def channelid(channel, name):
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
@@ -85,7 +85,7 @@ async def copy(name):
 
 
 async def findid(name, ids):
-    #await checkcred()
+    # await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -107,7 +107,7 @@ async def findid(name, ids):
 
 async def getuser(name):
     sheet = "STAFF"
-    #await checkcred()
+    # await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -121,6 +121,8 @@ async def getuser(name):
         return creditname["values"][0][0]
     except HttpError as error:
         logging.error(error)
+
+
 async def check_old_entries(bot):
     result = sheets.values().get(spreadsheetId=datasheet, range="DATA!L:L").execute()
     result2 = sheets.values().get(spreadsheetId=datasheet, range="DATA!M:M").execute()
@@ -136,40 +138,45 @@ async def check_old_entries(bot):
         if value:
             try:
                 # Parse the date and time from the value
-                date_time = datetime.strptime(value[0], "%Y-%m-%d %H:%M:%S")
+                date_time = datetime.strptime(value[0], "%Y-%m-%d")
                 date_only = date_time.strftime("%Y-%m-%d")
                 print("checking due date")
                 # Check if the date and time is older than 5 days
                 if now - date_time > timedelta(seconds=5):
-                    print(values2[i-1])
-                    if values2[i-1] and values2[i-1][0] == "Old":
+                    print(values2[i - 1])
+                    if values2[i - 1] and values2[i - 1][0] is not None:
                         print("already send response")
                         pass
                     else:
                         print(f"Cell L{i} is older than 5 days.")
-                        sheets.values().update(spreadsheetId=datasheet, range=f"DATA!M{i}:M{i}",
-                                           valueInputOption="USER_ENTERED", body={'values': [["Old"]]}).execute()
+
                         data = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!F{i}:K{i}").execute()
-                        series= data["values"][0][1]
+                        series = data["values"][0][1]
                         chapter = data["values"][0][2]
                         user = data["values"][0][5]
                         role = data["values"][0][3]
                         if role in role_dict_reaction:
                             role = role_dict_reaction[role]
-                        message = await channel.send(f"Hey, {user}! You accepted an assignment on {date_only} for {series} CH {chapter} ({role}). The deadline for this is tomorrow. Will you be able to finish it by then?")
+                        message = await channel.send(
+                            f"Hey, {user}! You accepted an assignment on {date_only} for {series} CH {chapter} ({role}). The deadline for this is tomorrow. Will you be able to finish it by then?")
+                        sheets.values().update(spreadsheetId=datasheet, range=f"DATA!M{i}:M{i}",
+                                               valueInputOption="USER_ENTERED", body={'values': [[str(message.id)]]}).execute()
                         await message.add_reaction("✅")
                         await message.add_reaction("❌")
 
             except ValueError:
                 # The value is not a date and time
                 pass
+
+
 async def storetime(row, time):
     sheets.values().update(spreadsheetId=datasheet, range=f"DATA!L{row}:L{row}",
-                          valueInputOption="USER_ENTERED", body={'values': [[time]]}).execute()
+                           valueInputOption="USER_ENTERED", body={'values': [[time]]}).execute()
+
 
 async def getmessageid(id):
     name = None
-    #await checkcred()
+    # await checkcred()
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
@@ -192,7 +199,7 @@ async def write(data, status):
     first = data[2]
     second = data[3]
     user = data[4]
-    #await checkcred()
+    # await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -206,9 +213,11 @@ async def write(data, status):
         if not chapter_found:
             # Check if the previous chapter rounded equals the current chapter
             # and if the previous chapter plus one equals the current chapter
-            prev_chapter = float(value['values'][len(value['values']) - 1][0]) if value['values'] else 0  # Ensure prev_chapter is an integer
+            prev_chapter = float(value['values'][len(value['values']) - 1][0]) if value[
+                'values'] else 0  # Ensure prev_chapter is an integer
             math.floor(prev_chapter)
-            if math.ceil(float(prev_chapter)) ==  math.floor(float(chapter)) or math.floor(float(prev_chapter)) == math.floor(float(chapter)) or int(prev_chapter)+1 == int(chapter):
+            if math.ceil(float(prev_chapter)) == math.floor(float(chapter)) or math.floor(
+                    float(prev_chapter)) == math.floor(float(chapter)) or int(prev_chapter) + 1 == int(chapter):
                 chapter_index = len(value['values']) + 1
                 sheets.values().append(spreadsheetId=datasheet, range=f"{sheet_name}!A{chapter_index}:A{chapter_index}",
                                        insertDataOption="INSERT_ROWS", valueInputOption="USER_ENTERED",
@@ -228,7 +237,7 @@ async def write(data, status):
 
 
 async def store(message_id, sheet, ch, user, f, se):
-    #await checkcred()
+    # await checkcred()
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
@@ -240,7 +249,7 @@ async def store(message_id, sheet, ch, user, f, se):
 
 
 async def writechannel(channel_id, sheet):
-    #await checkcred()
+    # await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -253,7 +262,7 @@ async def writechannel(channel_id, sheet):
 
 
 async def updatesheet(channel_id, sheet):
-    #await checkcred()
+    # await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -271,7 +280,7 @@ async def updatesheet(channel_id, sheet):
 
 
 async def updatechannel_id(channel_id, sheet):
-    #await checkcred()
+    # await checkcred()
 
     try:
         service = build("sheets", "v4", credentials=credential)
@@ -289,7 +298,7 @@ async def updatechannel_id(channel_id, sheet):
 
 
 async def getsheetname(channel_id):
-    #await checkcred()
+    # await checkcred()
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
@@ -305,7 +314,7 @@ async def getsheetname(channel_id):
 
 
 async def getchannelid(sheet):
-    #await checkcred()
+    # await checkcred()
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
@@ -321,7 +330,7 @@ async def getchannelid(sheet):
 
 
 async def delete_row(row_index):
-    #await checkcred()
+    # await checkcred()
     service = build("sheets", "v4", credentials=credential)
     sheets = service.spreadsheets()
     sheets.values().update(spreadsheetId=datasheet, range=f"DATA!{row_index}:{row_index}",
@@ -336,6 +345,4 @@ async def get_sheet_id_by_name(spreadsheet_id, sheet_name):
         if sheet['properties']['title'] == sheet_name:
             print(sheet['properties']['sheetId'])
 
-
 # get_sheet_id_by_name(datasheet, "DATA")
-

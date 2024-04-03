@@ -34,6 +34,7 @@ load_dotenv()
 TOKEN = os.getenv("TOKEN")  # Discord Token
 BOT_ID = 1218682240947458129  # User id of the bot
 ASSIGNMENT_CHANNEL = 1218705159614631946  # Channel ID of the assignment channel
+CHECKUP_CHANNEL = 1224453260543266907  # Channel ID of Hdydrometer
 role_dict = {
     "RP": ("B", "C"),
     "TL": ("D", "E"),
@@ -70,29 +71,40 @@ async def on_ready():
 async def on_raw_reaction_add(payload):
     assignmentlog = bot.get_channel(1219030657955794954)
     channel_id = payload.channel_id
-    if (channel_id == ASSIGNMENT_CHANNEL) and payload.user_id != BOT_ID:
-        data, row_name = await sh.getmessageid(payload.message_id)
-        if f"<@{payload.user_id}>" == data[4]:
-            emoji_repr = repr(payload.emoji)
-            role = data[2]
-            if emoji_repr == "<PartialEmoji animated=False name='✅' id=None>":
-                await remove_reaction(payload.channel_id, payload.message_id, "❌", True)
-                await remove_reaction(payload.channel_id, payload.message_id, "✅", True)
-                await reactionhelper(data, assignmentlog, "Working")
-                current_time = datetime.now().isoformat()
-                await sh.storetime(row_name, current_time)
-            elif emoji_repr == "<PartialEmoji animated=False name='🥂' id=None>":
-                if role in role_dict_reaction:
-                    role = role_dict_reaction[role]
-                await assignmentlog.send(f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | Done | {data[4]}")
-                await sh.write(data, "Done")
-                await sh.delete_row(row_name)  # clear message data
-                await remove_reaction(payload.channel_id, payload.message_id, "🥂", False)
+    if payload.user_id != BOT_ID:  # Checks so it's not the bot reacting
+        emoji_repr = repr(payload.emoji)
+        if (channel_id == ASSIGNMENT_CHANNEL):
+            data, row_name = await sh.getmessageid(payload.message_id)
+            if f"<@{payload.user_id}>" == data[4]:
 
-            else:
-                await reactionhelper(data, assignmentlog, "Declined")
-                await delete_message(payload.channel_id, payload.message_id)
-                await sh.delete_row(row_name)  # clear
+                role = data[2]
+                if emoji_repr == "<PartialEmoji animated=False name='✅' id=None>":
+                    await remove_reaction(payload.channel_id, payload.message_id, "❌", True)
+                    await remove_reaction(payload.channel_id, payload.message_id, "✅", True)
+                    await reactionhelper(data, assignmentlog, "Working")
+                    current_time = datetime.now().date().strftime("%Y-%m-%d")
+                    await sh.storetime(row_name, current_time)
+                elif emoji_repr == "<PartialEmoji animated=False name='🥂' id=None>":
+                    if role in role_dict_reaction:
+                        role = role_dict_reaction[role]
+                    await assignmentlog.send(f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | Done | {data[4]}")
+                    await sh.write(data, "Done")
+                    await sh.delete_row(row_name)  # clear message data
+                    await remove_reaction(payload.channel_id, payload.message_id, "🥂", False)
+
+                else:
+                    await reactionhelper(data, assignmentlog, "Declined")
+                    await delete_message(payload.channel_id, payload.message_id)
+                    await sh.delete_row(row_name)  # clear
+        elif channel_id == CHECKUP_CHANNEL:
+            if emoji_repr == "<PartialEmoji animated=False name='✅' id=None>":
+                await remove_reaction(payload.channel_id, payload.message_id, "✅", True)
+            if emoji_repr == "<PartialEmoji animated=False name='❌' id=None>":
+                ## Delete message ##
+                ## Update due date ##
+                await sh.store()
+                await remove_reaction(payload.channel_id, payload.message_id, "❌", True)
+
 
 
 @bot.event
@@ -292,7 +304,7 @@ async def select_date(ctx):
     date = datetime.strptime(msg.content, '%Y-%m-%d')
     await ctx.send(f'You have selected the date {date:%B %d, %Y}.')
 
-
+# Looping tasks #
 #@tasks.loop(minutes=1)
 #async def check_old_entries():
     #await sh.check_old_entries(bot)
