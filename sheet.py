@@ -191,6 +191,26 @@ async def getmessageid(id):
         logging.error(error)
 
 
+async def remove_due_date(row):
+    sheets.values().update(spreadsheetId=datasheet, range=f"DATA!M{row}:M{row}",
+                           valueInputOption="USER_ENTERED", body={'values': [[""]]}).execute()
+
+async def getmessageid_due_date(id):
+    name = None
+    try:
+        service = build("sheets", "v4", credentials=credential)
+        sheets = service.spreadsheets()
+        value = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!M:M").execute()
+        for i, row in enumerate(value['values'], start=1):
+            if row and f"{row[0]}" == f"{id}":
+                name = i
+        if name is not None:
+            data = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!G{name}:K{name}").execute()
+            return data["values"][0], name
+    except HttpError as error:
+        logging.error(error)
+
+
 async def write(data, status):
     sheet_name = data[0]
     chapter = data[1]

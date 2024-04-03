@@ -8,7 +8,7 @@ import os
 import sys
 from requests import get
 from discord.ext import tasks
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Logging #
 logger = logging.getLogger(__name__)
@@ -87,7 +87,8 @@ async def on_raw_reaction_add(payload):
                 elif emoji_repr == "<PartialEmoji animated=False name='🥂' id=None>":
                     if role in role_dict_reaction:
                         role = role_dict_reaction[role]
-                    await assignmentlog.send(f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | Done | {data[4]}")
+                    await assignmentlog.send(
+                        f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | Done | {data[4]}")
                     await sh.write(data, "Done")
                     await sh.delete_row(row_name)  # clear message data
                     await remove_reaction(payload.channel_id, payload.message_id, "🥂", False)
@@ -97,15 +98,22 @@ async def on_raw_reaction_add(payload):
                     await delete_message(payload.channel_id, payload.message_id)
                     await sh.delete_row(row_name)  # clear
         elif channel_id == CHECKUP_CHANNEL:
-            if emoji_repr == "<PartialEmoji animated=False name='✅' id=None>":
-                await remove_reaction(payload.channel_id, payload.message_id, "✅", True)
-            if emoji_repr == "<PartialEmoji animated=False name='❌' id=None>":
-                ## Delete message ##
-                ## Update due date ##
-                await sh.store()
-                await remove_reaction(payload.channel_id, payload.message_id, "❌", True)
+            data, row_name = await sh.getmessageid_due_date(payload.message_id)
+            if f"<@{payload.user_id}>" == data[4]:
 
-
+                if emoji_repr == "<PartialEmoji animated=False name='✅' id=None>":
+                    await remove_reaction(payload.channel_id, payload.message_id, "✅", True)
+                    await remove_reaction(payload.channel_id, payload.message_id, "❌", True)
+                if emoji_repr == "<PartialEmoji animated=False name='❌' id=None>":
+                    ## check if user is the one who assigned the task ##
+                    row = row_name
+                    user = bot.get_user(payload.user_id)
+                    date = await select_date(user)
+                    due_date = date - timedelta(days=5)
+                    print(due_date)
+                    await sh.storetime(row, date)
+                    await sh.remove_due_date(row)
+                    await delete_message(payload.channel_id, payload.message_id)
 
 @bot.event
 async def on_member_join(member):
@@ -292,22 +300,25 @@ async def foo(ctx, arg):
     await ctx.send(arg)
 
 
-@bot.command(name='select_date')
-async def select_date(ctx):
-    await ctx.send('Please enter a date in the format YYYY-MM-DD.')
 
-    def check(msg):
-        return msg.author == ctx.author and msg.channel == ctx.channel and \
-            datetime.strptime(msg.content, '%Y-%m-%d')
 
-    msg = await bot.wait_for('message', check=check)
-    date = datetime.strptime(msg.content, '%Y-%m-%d')
-    await ctx.send(f'You have selected the date {date:%B %d, %Y}.')
 
 # Looping tasks #
 #@tasks.loop(minutes=1)
 #async def check_old_entries():
-    #await sh.check_old_entries(bot)
+#    await sh.check_old_entries(bot)
 
 
+
+async def select_date(user):
+    await user.send('Please enter a date in the format YYYY-MM-DD.')
+
+    def check(msg):
+        return msg.author == user and isinstance(msg.channel, discord.DMChannel) and \
+            datetime.strptime(msg.content, '%Y-%m-%d')
+
+    msg = await bot.wait_for('message', check=check)
+    date = datetime.strptime(msg.content, '%Y-%m-%d').date()
+    await user.send(f'You have selected the date {date:%B %d, %Y}.')
+    return date
 bot.run(TOKEN)
