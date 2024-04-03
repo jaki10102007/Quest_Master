@@ -3,20 +3,37 @@ from discord import app_commands
 from discord.ext import commands
 import sheet as sh
 import logging
-import inspect
 from dotenv import load_dotenv
 import os
 import sys
 from requests import get
+from discord.ext import tasks
+from datetime import datetime
 
+# Logging #
 logger = logging.getLogger(__name__)
 handler = logging.FileHandler('example.log', 'w', 'utf-8')
 formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
+
+
+def handle_exception(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+
+    logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+
+
+sys.excepthook = handle_exception
+
+# Constants #
 load_dotenv()
 TOKEN = os.getenv("TOKEN")  # Discord Token
+BOT_ID = 1218682240947458129  # User id of the bot
+ASSIGNMENT_CHANNEL = 1218705159614631946  # Channel ID of the assignment channel
 role_dict = {
     "RP": ("B", "C"),
     "TL": ("D", "E"),
@@ -34,25 +51,14 @@ role_dict_reaction = {
     "L": "QC"
 }
 
-line_number = inspect.currentframe().f_lineno
-
-
-def handle_exception(exc_type, exc_value, exc_traceback):
-    if issubclass(exc_type, KeyboardInterrupt):
-        sys.__excepthook__(exc_type, exc_value, exc_traceback)
-        return
-
-    logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
-
-
-sys.excepthook = handle_exception
-
 bot = commands.Bot(command_prefix='$', intents=discord.Intents.all())
 
 
+# Bot events #
 @bot.event
 async def on_ready():
     logger.info(f'{bot.user} has connected to Discord!')
+    check_old_entries.start()
     try:
         synced = await bot.tree.sync()
         logger.info(f"Synced {len(synced)} command(s)")
@@ -60,6 +66,41 @@ async def on_ready():
         logger.error(e)
 
 
+@bot.event
+async def on_raw_reaction_add(payload):
+    assignmentlog = bot.get_channel(1219030657955794954)
+    channel_id = payload.channel_id
+    if (channel_id == ASSIGNMENT_CHANNEL) and payload.user_id != BOT_ID:
+        data, row_name = await sh.getmessageid(payload.message_id)
+        if f"<@{payload.user_id}>" == data[4]:
+            emoji_repr = repr(payload.emoji)
+            role = data[2]
+            if emoji_repr == "<PartialEmoji animated=False name='✅' id=None>":
+                await remove_reaction(payload.channel_id, payload.message_id, "❌", True)
+                await remove_reaction(payload.channel_id, payload.message_id, "✅", True)
+                await reactionhelper(data, assignmentlog, "Working")
+                current_time = datetime.now().isoformat()
+                await sh.storetime(row_name, current_time)
+            elif emoji_repr == "<PartialEmoji animated=False name='🥂' id=None>":
+                if role in role_dict_reaction:
+                    role = role_dict_reaction[role]
+                await assignmentlog.send(f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | Done | {data[4]}")
+                await sh.write(data, "Done")
+                await sh.delete_row(row_name)  # clear message data
+                await remove_reaction(payload.channel_id, payload.message_id, "🥂", False)
+
+            else:
+                await reactionhelper(data, assignmentlog, "Declined")
+                await delete_message(payload.channel_id, payload.message_id)
+                await sh.delete_row(row_name)  # clear
+
+
+@bot.event
+async def on_member_join(member):
+    await sh.findid(member.name, str(member.id))
+
+
+# Helper functions #
 async def remove_reaction(channel_id, message_id, emoji, add):
     channel = bot.get_channel(channel_id)
     message = await channel.fetch_message(message_id)
@@ -82,48 +123,15 @@ async def reactionhelper(data, assignmentlog, status):
         role = role_dict_reaction[role]
     await sh.write(data, status)
     await assignmentlog.send(
-        f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | sheet updated to status: {status} by: {data[4]}")
+        f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | sheet updated to status: **{status}** by: {data[4]}")
 
 
-@bot.event
-async def on_raw_reaction_add(payload):
-    assignmentlog = bot.get_channel(1219030657955794954)
-    channel_id = payload.channel_id
-    target_channel_id = 1218705159614631946  # only checks the assignment channel
-    bot_id = 1218682240947458129  # id of the bot
-    if (channel_id == target_channel_id) and payload.user_id != bot_id:
-        data, row_name = await sh.getmessageid(payload.message_id)
-        if f"<@{payload.user_id}>" == data[4]:
-            emoji_repr = repr(payload.emoji)
-            role = data[2]
-            if emoji_repr == "<PartialEmoji animated=False name='✅' id=None>":
-                await remove_reaction(payload.channel_id, payload.message_id, "❌", True)
-                await remove_reaction(payload.channel_id, payload.message_id, "✅", True)
-                await reactionhelper(data, assignmentlog, "Working")
-            elif emoji_repr == "<PartialEmoji animated=False name='🥂' id=None>":
-                if role in role_dict_reaction:
-                    role = role_dict_reaction[role]
-                await assignmentlog.send(f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | Done | {data[4]}")
-                await sh.write(data, "Done")
-                await sh.delete_row(row_name)  # clear message data
-                await remove_reaction(payload.channel_id, payload.message_id, "🥂", False)
-
-            else:
-                await reactionhelper(data, assignmentlog, "Declined")
-                await delete_message(payload.channel_id, payload.message_id)
-                await sh.delete_row(row_name)  # clear
-
-
+# /commands #
 @bot.tree.command(name="findid")
 @app_commands.describe(user="User")
 async def findid(interaction: discord.Interaction, user: discord.User):
     await interaction.response.send_message("Done")
     await sh.findid(user.name, str(user.id))
-
-
-@bot.event
-async def on_member_join(member):
-    await sh.findid(member.name, str(member.id))
 
 
 @bot.tree.command(name="say")
@@ -137,8 +145,7 @@ async def say(interaction: discord.Interaction, arg: str):
 @app_commands.describe(series="# of the series", chapter="What chapter", role="What needs to be done", who="Who")
 async def assign(interaction: discord.Interaction, series: str, chapter: str, role: str, who: str):
     await interaction.response.defer(ephemeral=True)
-    target_channel_id = int("1218705159614631946")  # Replace with the ID of the target channel
-    target_channel = bot.get_channel(target_channel_id)
+    target_channel = bot.get_channel(ASSIGNMENT_CHANNEL)
     role = role.upper()
     first = None
     second = None
@@ -156,11 +163,13 @@ async def assign(interaction: discord.Interaction, series: str, chapter: str, ro
         await message.add_reaction("✅")
         await message.add_reaction("❌")
 
+
 @bot.tree.command(name="bulkassign")
-@app_commands.describe(series="# of the series", start_chapter="start chapter",end_chapter="end chapter", role="What needs to be done", who="Who")
-async def bulkassign(interaction: discord.Interaction, series: str, start_chapter: int, end_chapter: int, role: str, who: str):
-    target_channel_id = int("1218705159614631946")  # Replace with the ID of the target channel
-    target_channel = bot.get_channel(target_channel_id)
+@app_commands.describe(series="# of the series", start_chapter="start chapter", end_chapter="end chapter",
+                       role="What needs to be done", who="Who")
+async def bulkassign(interaction: discord.Interaction, series: str, start_chapter: int, end_chapter: int, role: str,
+                     who: str):
+    target_channel = bot.get_channel(ASSIGNMENT_CHANNEL)
     role = role.upper()
     first = None
     second = None
@@ -170,7 +179,7 @@ async def bulkassign(interaction: discord.Interaction, series: str, start_chapte
     if first is None:
         await interaction.response.send_message(f" '{role.upper()}' is not a valid Role ", ephemeral=True)
     else:
-        for x in range(start_chapter, end_chapter +1):
+        for x in range(start_chapter, end_chapter + 1):
             chapter = str(x)
             message = await target_channel.send(f"{series}| CH {chapter} | {role} | {who}")
             data = [await sh.getsheetname(series), chapter, first, second, who]
@@ -221,11 +230,6 @@ async def updatechannelid(interaction: discord.Interaction, new_channel: str, na
     await sh.updatechannel_id(new_channel, name)
 
 
-@bot.command()
-async def foo(ctx, arg):
-    await ctx.send(arg)
-
-
 @bot.tree.command(name="done")
 @app_commands.describe(series="# of the Series", chapter="What chapter", role="What role")
 async def assign(interaction: discord.Interaction, series: str, chapter: str, role: str):
@@ -261,11 +265,35 @@ async def ip(interaction: discord.Interaction):
         await interaction.response.send_message("You are not allowed to use this command")
 
 
+# Normal Commands #
 @bot.tree.command(name="logs")
 @app_commands.describe()
 async def logs(interaction: discord.Interaction):
     with open("example.log", "r") as file:
         await interaction.response.send_message(file.read(), ephemeral=True)
+
+
+@bot.command()
+async def foo(ctx, arg):
+    await ctx.send(arg)
+
+
+@bot.command(name='select_date')
+async def select_date(ctx):
+    await ctx.send('Please enter a date in the format YYYY-MM-DD.')
+
+    def check(msg):
+        return msg.author == ctx.author and msg.channel == ctx.channel and \
+            datetime.strptime(msg.content, '%Y-%m-%d')
+
+    msg = await bot.wait_for('message', check=check)
+    date = datetime.strptime(msg.content, '%Y-%m-%d')
+    await ctx.send(f'You have selected the date {date:%B %d, %Y}.')
+
+
+@tasks.loop(minutes=1)
+async def check_old_entries():
+    await sh.check_old_entries(bot)
 
 
 bot.run(TOKEN)

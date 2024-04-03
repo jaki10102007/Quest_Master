@@ -9,9 +9,17 @@ import logging
 import math
 from google.oauth2.service_account import Credentials
 from google.oauth2 import service_account
-#command
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+from datetime import datetime, timedelta
 
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+role_dict_reaction = {
+    "B": "RP",
+    "D": "TL",
+    "F": "PR",
+    "H": "CLRD",
+    "J": "TS",
+    "L": "QC"
+}
 load_dotenv()
 staffsheet = os.getenv("STAFF")
 datasheet = os.getenv("DATA")
@@ -23,7 +31,8 @@ credential = service_account.Credentials.from_service_account_file(
 logging.info("staffsheet: " + staffsheet)
 logging.info("datasheet: " + datasheet)
 logging.info("SPREADSHEET_ID: " + SPREADSHEET_ID)
-
+service = build("sheets", "v4", credentials=credential)
+sheets = service.spreadsheets()
 
 async def channelid(channel, name):
 
@@ -112,7 +121,51 @@ async def getuser(name):
         return creditname["values"][0][0]
     except HttpError as error:
         logging.error(error)
+async def check_old_entries(bot):
+    result = sheets.values().get(spreadsheetId=datasheet, range="DATA!L:L").execute()
+    result2 = sheets.values().get(spreadsheetId=datasheet, range="DATA!M:M").execute()
+    values = result.get('values', [])
+    values2 = result2.get('values', [])
+    print(result2)
+    # Get the current date and time
+    now = datetime.now()
+    channel_id = 1224453260543266907  # Replace with your channel ID
+    channel = bot.get_channel(channel_id)
+    # Loop through the values
+    for i, value in enumerate(values, start=1):
+        if value:
+            try:
+                # Parse the date and time from the value
+                date_time = datetime.strptime(value[0], "%Y-%m-%d %H:%M:%S")
+                date_only = date_time.strftime("%Y-%m-%d")
+                print("checking due date")
+                # Check if the date and time is older than 5 days
+                if now - date_time > timedelta(seconds=5):
+                    print(values2[i-1])
+                    if values2[i-1] and values2[i-1][0] == "Old":
+                        print("already send response")
+                        pass
+                    else:
+                        print(f"Cell L{i} is older than 5 days.")
+                        sheets.values().update(spreadsheetId=datasheet, range=f"DATA!M{i}:M{i}",
+                                           valueInputOption="USER_ENTERED", body={'values': [["Old"]]}).execute()
+                        data = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!F{i}:K{i}").execute()
+                        series= data["values"][0][1]
+                        chapter = data["values"][0][2]
+                        user = data["values"][0][5]
+                        role = data["values"][0][3]
+                        if role in role_dict_reaction:
+                            role = role_dict_reaction[role]
+                        message = await channel.send(f"Hey, {user}! You accepted an assignment on {date_only} for {series} CH {chapter} ({role}). The deadline for this is tomorrow. Will you be able to finish it by then?")
+                        await message.add_reaction("✅")
+                        await message.add_reaction("❌")
 
+            except ValueError:
+                # The value is not a date and time
+                pass
+async def storetime(row, time):
+    sheets.values().update(spreadsheetId=datasheet, range=f"DATA!L{row}:L{row}",
+                          valueInputOption="USER_ENTERED", body={'values': [[time]]}).execute()
 
 async def getmessageid(id):
     name = None
