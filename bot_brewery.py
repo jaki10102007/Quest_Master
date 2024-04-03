@@ -255,6 +255,13 @@ async def assign(interaction: discord.Interaction, series: str, chapter: str, ro
         # await interaction.response.send_message("Send", ephemeral=True)
 
 
+@bot.tree.command(name="logs")
+@app_commands.describe()
+async def logs(interaction: discord.Interaction):
+    with open("example.log", "r") as file:
+        await interaction.response.send_message(file.read(), ephemeral=True)
+
+
 @bot.tree.command(name="ip")
 @app_commands.describe()
 async def ip(interaction: discord.Interaction):
@@ -266,11 +273,6 @@ async def ip(interaction: discord.Interaction):
 
 
 # Normal Commands #
-@bot.tree.command(name="logs")
-@app_commands.describe()
-async def logs(interaction: discord.Interaction):
-    with open("example.log", "r") as file:
-        await interaction.response.send_message(file.read(), ephemeral=True)
 
 
 @bot.command()
@@ -291,9 +293,9 @@ async def select_date(ctx):
     await ctx.send(f'You have selected the date {date:%B %d, %Y}.')
 
 
-@tasks.loop(minutes=1)
-async def check_old_entries():
-    await sh.check_old_entries(bot)
+#@tasks.loop(minutes=1)
+#async def check_old_entries():
+    #await sh.check_old_entries(bot)
 
 
 bot.run(TOKEN)
