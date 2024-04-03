@@ -142,7 +142,7 @@ async def check_old_entries(bot):
                 date_only = date_time.strftime("%Y-%m-%d")
                 print("checking due date")
                 # Check if the date and time is older than 5 days
-                if now - date_time > timedelta(seconds=5):
+                if now - date_time > timedelta(days=5):
                     print(values2[i - 1])
                     if values2[i - 1] and values2[i - 1][0] is not None:
                         print("already send response")
@@ -171,7 +171,7 @@ async def check_old_entries(bot):
 
 async def storetime(row, time):
     sheets.values().update(spreadsheetId=datasheet, range=f"DATA!L{row}:L{row}",
-                           valueInputOption="USER_ENTERED", body={'values': [[time]]}).execute()
+                           valueInputOption="USER_ENTERED", body={'values': [[str(time)]]}).execute()
 
 
 async def getmessageid(id):

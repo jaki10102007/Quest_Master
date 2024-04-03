@@ -59,7 +59,7 @@ bot = commands.Bot(command_prefix='$', intents=discord.Intents.all())
 @bot.event
 async def on_ready():
     logger.info(f'{bot.user} has connected to Discord!')
-    #check_old_entries.start()
+    check_old_entries.start()
     try:
         synced = await bot.tree.sync()
         logger.info(f"Synced {len(synced)} command(s)")
@@ -102,18 +102,17 @@ async def on_raw_reaction_add(payload):
             if f"<@{payload.user_id}>" == data[4]:
 
                 if emoji_repr == "<PartialEmoji animated=False name='✅' id=None>":
-                    await remove_reaction(payload.channel_id, payload.message_id, "✅", True)
-                    await remove_reaction(payload.channel_id, payload.message_id, "❌", True)
+                    await remove_reaction(payload.channel_id, payload.message_id, "❌", False)
                 if emoji_repr == "<PartialEmoji animated=False name='❌' id=None>":
-                    ## check if user is the one who assigned the task ##
                     row = row_name
                     user = bot.get_user(payload.user_id)
                     date = await select_date(user)
                     due_date = date - timedelta(days=5)
                     print(due_date)
-                    await sh.storetime(row, date)
+                    await sh.storetime(row, due_date)
                     await sh.remove_due_date(row)
                     await delete_message(payload.channel_id, payload.message_id)
+
 
 @bot.event
 async def on_member_join(member):
@@ -121,6 +120,7 @@ async def on_member_join(member):
 
 
 # Helper functions #
+#
 async def remove_reaction(channel_id, message_id, emoji, add):
     channel = bot.get_channel(channel_id)
     message = await channel.fetch_message(message_id)
@@ -135,6 +135,19 @@ async def delete_message(channel_id, message_id):
     message = await channel.fetch_message(int(message_id))
 
     await message.delete()
+
+
+async def select_date(user):
+    await user.send('Please enter a date in the format YYYY-MM-DD.')
+
+    def check(msg):
+        return msg.author == user and isinstance(msg.channel, discord.DMChannel) and \
+            datetime.strptime(msg.content, '%Y-%m-%d')
+
+    msg = await bot.wait_for('message', check=check)
+    date = datetime.strptime(msg.content, '%Y-%m-%d').date()
+    await user.send(f'You have selected the date {date:%B %d, %Y}.')
+    return date
 
 
 async def reactionhelper(data, assignmentlog, status):
@@ -302,23 +315,10 @@ async def foo(ctx, arg):
 
 
 
-
 # Looping tasks #
-#@tasks.loop(minutes=1)
-#async def check_old_entries():
-#    await sh.check_old_entries(bot)
+@tasks.loop(minutes=1)
+async def check_old_entries():
+    await sh.check_old_entries(bot)
 
 
-
-async def select_date(user):
-    await user.send('Please enter a date in the format YYYY-MM-DD.')
-
-    def check(msg):
-        return msg.author == user and isinstance(msg.channel, discord.DMChannel) and \
-            datetime.strptime(msg.content, '%Y-%m-%d')
-
-    msg = await bot.wait_for('message', check=check)
-    date = datetime.strptime(msg.content, '%Y-%m-%d').date()
-    await user.send(f'You have selected the date {date:%B %d, %Y}.')
-    return date
 bot.run(TOKEN)
