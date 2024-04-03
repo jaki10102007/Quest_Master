@@ -58,7 +58,7 @@ bot = commands.Bot(command_prefix='$', intents=discord.Intents.all())
 @bot.event
 async def on_ready():
     logger.info(f'{bot.user} has connected to Discord!')
-    check_old_entries.start()
+    #check_old_entries.start()
     try:
         synced = await bot.tree.sync()
         logger.info(f"Synced {len(synced)} command(s)")
