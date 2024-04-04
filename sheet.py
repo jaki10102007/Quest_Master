@@ -128,7 +128,6 @@ async def check_old_entries(bot):
     result2 = sheets.values().get(spreadsheetId=datasheet, range="DATA!M:M").execute()
     values = result.get('values', [])
     values2 = result2.get('values', [])
-    print(result2)
     # Get the current date and time
     now = datetime.now()
     channel_id = 1224453260543266907  # Replace with your channel ID
@@ -140,16 +139,12 @@ async def check_old_entries(bot):
                 # Parse the date and time from the value
                 date_time = datetime.strptime(value[0], "%Y-%m-%d")
                 date_only = date_time.strftime("%Y-%m-%d")
-                print("checking due date")
                 # Check if the date and time is older than 5 days
-                if now - date_time > timedelta(days=5):
+                if now - date_time > timedelta(days=4):
                     print(values2[i - 1])
                     if values2[i - 1] and values2[i - 1][0] is not None:
-                        print("already send response")
                         pass
                     else:
-                        print(f"Cell L{i} is older than 5 days.")
-
                         data = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!F{i}:K{i}").execute()
                         series = data["values"][0][1]
                         chapter = data["values"][0][2]
@@ -162,6 +157,7 @@ async def check_old_entries(bot):
                         sheets.values().update(spreadsheetId=datasheet, range=f"DATA!M{i}:M{i}",
                                                valueInputOption="USER_ENTERED", body={'values': [[str(message.id)]]}).execute()
                         await message.add_reaction("✅")
+                        await message.add_reaction("<:no:1225574648088105040>")
                         await message.add_reaction("❌")
 
             except ValueError:
@@ -205,7 +201,7 @@ async def getmessageid_due_date(id):
             if row and f"{row[0]}" == f"{id}":
                 name = i
         if name is not None:
-            data = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!G{name}:K{name}").execute()
+            data = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!G{name}:L{name}").execute()
             return data["values"][0], name
     except HttpError as error:
         logging.error(error)

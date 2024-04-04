@@ -71,6 +71,7 @@ async def on_ready():
 async def on_raw_reaction_add(payload):
     assignmentlog = bot.get_channel(1219030657955794954)
     channel_id = payload.channel_id
+    print(repr(payload.emoji))
     if payload.user_id != BOT_ID:  # Checks so it's not the bot reacting
         emoji_repr = repr(payload.emoji)
         if (channel_id == ASSIGNMENT_CHANNEL):
@@ -88,7 +89,7 @@ async def on_raw_reaction_add(payload):
                     if role in role_dict_reaction:
                         role = role_dict_reaction[role]
                     await assignmentlog.send(
-                        f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | Done | {data[4]}")
+                        f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | **Done** | {data[4]}")
                     await sh.write(data, "Done")
                     await sh.delete_row(row_name)  # clear message data
                     await remove_reaction(payload.channel_id, payload.message_id, "🥂", False)
@@ -103,16 +104,27 @@ async def on_raw_reaction_add(payload):
 
                 if emoji_repr == "<PartialEmoji animated=False name='✅' id=None>":
                     await remove_reaction(payload.channel_id, payload.message_id, "❌", False)
-                if emoji_repr == "<PartialEmoji animated=False name='❌' id=None>":
+                    await remove_reaction(payload.channel_id, payload.message_id, "<:no:1225574648088105040>", False)
+                if emoji_repr == "<PartialEmoji animated=False name='no' id=1225574648088105040>":
                     row = row_name
                     user = bot.get_user(payload.user_id)
-                    date = await select_date(user)
-                    due_date = date - timedelta(days=5)
+                    role = data[2]
+                    original_date = data[5]
+                    if role in role_dict_reaction:
+                        role = role_dict_reaction[role]
+                    date, msg = await select_date(user, data[0], data[1], role, f"<@{payload.user_id}>")
+                    due_date = date - timedelta(days=4)
                     print(due_date)
                     await sh.storetime(row, due_date)
                     await sh.remove_due_date(row)
                     await delete_message(payload.channel_id, payload.message_id)
-
+                    await assignmentlog.send(
+                        f"<@{payload.user_id}> has **extended** the due date for {data[0]} CH {data[1]} (Role: {role}) from {original_date} to **{due_date}**.\n"
+                        f"Reason: {msg.content}")
+                elif emoji_repr == "<PartialEmoji animated=False name='❌' id=None>":
+                    await reactionhelper(data, assignmentlog, "Declined")
+                    await delete_message(payload.channel_id, payload.message_id)
+                    await sh.delete_row(row_name)  # clear
 
 @bot.event
 async def on_member_join(member):
@@ -137,8 +149,11 @@ async def delete_message(channel_id, message_id):
     await message.delete()
 
 
-async def select_date(user):
-    await user.send('Please enter a date in the format YYYY-MM-DD.')
+async def select_date(user, series, chapter, role, usermention):
+    await user.send(
+        f'Hey, {usermention}! It looks like you need a bit more time to finish **"{series} CH {chapter} (Role: {role})".\n'
+        f'**No worries! Please let us know your new expected completion date by entering it in the format YYYY-MM-DD.\n'
+        f'This helps us update our schedule accordingly. Thanks for your hard work and for keeping the team updated!')
 
     def check(msg):
         return msg.author == user and isinstance(msg.channel, discord.DMChannel) and \
@@ -147,7 +162,13 @@ async def select_date(user):
     msg = await bot.wait_for('message', check=check)
     date = datetime.strptime(msg.content, '%Y-%m-%d').date()
     await user.send(f'You have selected the date {date:%B %d, %Y}.')
-    return date
+    await user.send('What is the reason for the delay? Please provide a brief explanation.')
+    msg = await bot.wait_for('message', check=lambda m: m.author == user and isinstance(m.channel, discord.DMChannel))
+    await user.send(
+        f'Thank you for letting us know! We will update the schedule accordingly. \nIf you have any questions or need'
+        f'further assistance, please feel free to reach out to us. \nWe appreciate your hard work and dedication to '
+        f'the team!')
+    return date, msg
 
 
 async def reactionhelper(data, assignmentlog, status):
@@ -172,6 +193,29 @@ async def findid(interaction: discord.Interaction, user: discord.User):
 async def say(interaction: discord.Interaction, arg: str):
     user = interaction.user.name
     await interaction.response.send_message(f"Hey{interaction.user.mention}, test 2, {user}")
+
+
+@bot.tree.command(name="oneshotassign")
+@app_commands.describe(series="# of the series", chapter="What chapter", role="What needs to be done", who="Who")
+async def assign(interaction: discord.Interaction, series: str, role: str, who: str, chapter: str = None):
+    await interaction.response.defer(ephemeral=True)
+    target_channel = bot.get_channel(ASSIGNMENT_CHANNEL)
+    role = role.upper()
+    first = None
+    second = None
+    if role.upper() in role_dict:
+        first, second = role_dict[role.upper()]
+    if first is None:
+        await interaction.response.send_message(f" '{role.upper()}' is not a valid Role ", ephemeral=True)
+    else:
+
+        message = await target_channel.send(f"{series} | {role} | {who}")
+        data = [await sh.getsheetname(series), first, second, who]
+        await sh.store(message.id, data[0], who, first, second)
+        await sh.write(data, "Assigned")
+        await interaction.followup.send(content="Assigned")
+        await message.add_reaction("✅")
+        await message.add_reaction("❌")
 
 
 @bot.tree.command(name="assign")
@@ -311,8 +355,6 @@ async def ip(interaction: discord.Interaction):
 @bot.command()
 async def foo(ctx, arg):
     await ctx.send(arg)
-
-
 
 
 # Looping tasks #
