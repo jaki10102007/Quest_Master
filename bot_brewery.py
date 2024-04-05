@@ -60,6 +60,8 @@ bot = commands.Bot(command_prefix='$', intents=discord.Intents.all())
 async def on_ready():
     logger.info(f'{bot.user} has connected to Discord!')
     check_old_entries.start()
+    global guildstuff
+    guildstuff = bot.fetch_guild(1218035430373462016)
     try:
         synced = await bot.tree.sync()
         logger.info(f"Synced {len(synced)} command(s)")
@@ -192,30 +194,10 @@ async def findid(interaction: discord.Interaction, user: discord.User):
 @app_commands.describe(arg="what to say")
 async def say(interaction: discord.Interaction, arg: str):
     user = interaction.user.name
+    print(arg)
+    roles = await bot.guildstuff.fetch_member(int(arg))
+    print(roles)
     await interaction.response.send_message(f"Hey{interaction.user.mention}, test 2, {user}")
-
-
-@bot.tree.command(name="oneshotassign")
-@app_commands.describe(series="# of the series", chapter="What chapter", role="What needs to be done", who="Who")
-async def assign(interaction: discord.Interaction, series: str, role: str, who: str, chapter: str = None):
-    await interaction.response.defer(ephemeral=True)
-    target_channel = bot.get_channel(ASSIGNMENT_CHANNEL)
-    role = role.upper()
-    first = None
-    second = None
-    if role.upper() in role_dict:
-        first, second = role_dict[role.upper()]
-    if first is None:
-        await interaction.response.send_message(f" '{role.upper()}' is not a valid Role ", ephemeral=True)
-    else:
-
-        message = await target_channel.send(f"{series} | {role} | {who}")
-        data = [await sh.getsheetname(series), first, second, who]
-        await sh.store(message.id, data[0], who, first, second)
-        await sh.write(data, "Assigned")
-        await interaction.followup.send(content="Assigned")
-        await message.add_reaction("✅")
-        await message.add_reaction("❌")
 
 
 @bot.tree.command(name="assign")
@@ -223,24 +205,27 @@ async def assign(interaction: discord.Interaction, series: str, role: str, who: 
 async def assign(interaction: discord.Interaction, series: str, chapter: str, role: str, who: str):
     await interaction.response.defer(ephemeral=True)
     target_channel = bot.get_channel(ASSIGNMENT_CHANNEL)
-    role = role.upper()
-    first = None
-    second = None
-    if role.upper() in role_dict:
-        first, second = role_dict[role.upper()]
-    if first is None:
-        await interaction.response.send_message(f" '{role.upper()}' is not a valid Role ", ephemeral=True)
+    member = interaction.guild.get_member(int(who[2:-1]))
+    required_role = discord.utils.get(interaction.guild.roles, name="Hungover")
+    if required_role not in member.roles:
+            role = role.upper()
+            first = None
+            second = None
+            if role.upper() in role_dict:
+                first, second = role_dict[role.upper()]
+            if first is None:
+                await interaction.followup.send(f" '{role.upper()}' is not a valid Role ", ephemeral=True)
+            else:
+
+                message = await target_channel.send(f"{series}| CH {chapter} | {role} | {who}")
+                data = [await sh.getsheetname(series), chapter, first, second, who]
+                await sh.store(message.id, data[0], chapter, who, first, second)
+                await sh.write(data, "Assigned")
+                await interaction.followup.send(content="Assigned")
+                await message.add_reaction("✅")
+                await message.add_reaction("❌")
     else:
-
-        message = await target_channel.send(f"{series}| CH {chapter} | {role} | {who}")
-        data = [await sh.getsheetname(series), chapter, first, second, who]
-        await sh.store(message.id, data[0], chapter, who, first, second)
-        await sh.write(data, "Assigned")
-        await interaction.followup.send(content="Assigned")
-        await message.add_reaction("✅")
-        await message.add_reaction("❌")
-
-
+        await interaction.followup.send(f"{who} is on Hiatus", ephemeral=True)
 @bot.tree.command(name="bulkassign")
 @app_commands.describe(series="# of the series", start_chapter="start chapter", end_chapter="end chapter",
                        role="What needs to be done", who="Who")
