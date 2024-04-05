@@ -35,6 +35,7 @@ TOKEN = os.getenv("TOKEN")  # Discord Token
 BOT_ID = 1218682240947458129  # User id of the bot
 ASSIGNMENT_CHANNEL = 1218705159614631946  # Channel ID of the assignment channel
 CHECKUP_CHANNEL = 1224453260543266907  # Channel ID of Hdydrometer
+ONESHOT_CHANNEL = 1225634854390206494  # Channel ID of the oneshot channel
 role_dict = {
     "RP": ("B", "C"),
     "TL": ("D", "E"),
@@ -95,7 +96,6 @@ async def on_raw_reaction_add(payload):
                     await sh.write(data, "Done")
                     await sh.delete_row(row_name)  # clear message data
                     await remove_reaction(payload.channel_id, payload.message_id, "🥂", False)
-
                 else:
                     await reactionhelper(data, assignmentlog, "Declined")
                     await delete_message(payload.channel_id, payload.message_id)
@@ -127,6 +127,22 @@ async def on_raw_reaction_add(payload):
                     await reactionhelper(data, assignmentlog, "Declined")
                     await delete_message(payload.channel_id, payload.message_id)
                     await sh.delete_row(row_name)  # clear
+        elif channel_id == ONESHOT_CHANNEL:
+            if emoji_repr == "<PartialEmoji animated=False name='BunKill' id=1218766575302348891>":
+                role = "RP"
+            elif emoji_repr == "<PartialEmoji animated=False name='cocosideeye' id=1219500662799208458>":
+                role = "TL"
+            elif emoji_repr == "<PartialEmoji animated=False name='communistecommunist' id=1219519556305948723>":
+                role = "PR"
+            elif emoji_repr == "<PartialEmoji animated=False name='Kokopium' id=1219519277783322647>":
+                role = "CLRD"
+            elif emoji_repr == "<PartialEmoji animated=False name='mingmingsmirk' id=1224929840633741312>":
+                role = "TS"
+            elif emoji_repr == "<PartialEmoji animated=False name='JerryShocked' id=1218766878479093872>":
+                role = "QC"
+            else:
+                return
+            await sh.oneshot(payload.message_id, role)
 
 @bot.event
 async def on_member_join(member):
@@ -198,24 +214,40 @@ async def say(interaction: discord.Interaction, arg: str):
     roles = await bot.guildstuff.fetch_member(int(arg))
     print(roles)
     await interaction.response.send_message(f"Hey{interaction.user.mention}, test 2, {user}")
-
+@bot.tree.command(name="oneshot")
+@app_commands.describe(series="# of the series")
+async def oneshot(interaction: discord.Interaction, series: str):
+    target_channel = bot.get_channel(ONESHOT_CHANNEL)
+    await interaction.response.defer(ephemeral=True)
+    message = await target_channel.send(f" We are recruiting for a new oneshot **{series}**")
+    await message.add_reaction("<BunKill:1218766575302348891>")
+    await message.add_reaction("<cocosideeye:1219500662799208458>")
+    await message.add_reaction("<communistecommunist:1219519556305948723>")
+    await message.add_reaction("<Kokopium:1219519277783322647>")
+    await message.add_reaction("<mingmingsmirk:1224929840633741312>")
+    await message.add_reaction("<JerryShocked:1218766878479093872>")
+    series = sh.getsheetname(series)
+    await interaction.followup.send("Done")
 
 @bot.tree.command(name="assign")
 @app_commands.describe(series="# of the series", chapter="What chapter", role="What needs to be done", who="Who")
-async def assign(interaction: discord.Interaction, series: str, chapter: str, role: str, who: str):
+async def assign(interaction: discord.Interaction, series: str, role: str, who: str, chapter: str = None):
     await interaction.response.defer(ephemeral=True)
     target_channel = bot.get_channel(ASSIGNMENT_CHANNEL)
     member = interaction.guild.get_member(int(who[2:-1]))
     required_role = discord.utils.get(interaction.guild.roles, name="Hungover")
+    role = role.upper()
+    first = None
+    second = None
+    if role.upper() in role_dict:
+        first, second = role_dict[role.upper()]
+    if first is None:
+        await interaction.followup.send(f" '{role.upper()}' is not a valid Role ", ephemeral=True)
+    else:
+        logging.error(f"Role {role} is not valid")
+        ## One SHot ##
     if required_role not in member.roles:
-            role = role.upper()
-            first = None
-            second = None
-            if role.upper() in role_dict:
-                first, second = role_dict[role.upper()]
-            if first is None:
-                await interaction.followup.send(f" '{role.upper()}' is not a valid Role ", ephemeral=True)
-            else:
+
 
                 message = await target_channel.send(f"{series}| CH {chapter} | {role} | {who}")
                 data = [await sh.getsheetname(series), chapter, first, second, who]
