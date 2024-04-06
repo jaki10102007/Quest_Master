@@ -231,7 +231,7 @@ async def oneshot(interaction: discord.Interaction, series: str):
 
 @bot.tree.command(name="assign")
 @app_commands.describe(series="# of the series", chapter="What chapter", role="What needs to be done", who="Who")
-async def assign(interaction: discord.Interaction, series: str, role: str, who: str, chapter: str = None):
+async def assign(interaction: discord.Interaction, series: str, chapter: str,role: str, who: str):
     await interaction.response.defer(ephemeral=True)
     target_channel = bot.get_channel(ASSIGNMENT_CHANNEL)
     member = interaction.guild.get_member(int(who[2:-1]))
