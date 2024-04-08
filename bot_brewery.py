@@ -42,7 +42,8 @@ role_dict = {
     "PR": ("F", "G"),
     "CLRD": ("H", "I"),
     "TS": ("J", "K"),
-    "QC": ("L", "M")
+    "QC": ("L", "M"),
+    "UPD" : ("N", "O")
 }
 role_dict_reaction = {
     "B": "RP",
@@ -50,7 +51,8 @@ role_dict_reaction = {
     "F": "PR",
     "H": "CLRD",
     "J": "TS",
-    "L": "QC"
+    "L": "QC",
+    "N": "UPD"
 }
 
 bot = commands.Bot(command_prefix='$', intents=discord.Intents.all())
@@ -93,6 +95,10 @@ async def on_raw_reaction_add(payload):
                         role = role_dict_reaction[role]
                     await assignmentlog.send(
                         f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | **Done** | {data[4]}")
+                    if role == "UPD":
+                        await sh.write(data, "")
+                    else:
+                        await sh.write(data, "Done")
                     await sh.write(data, "Done")
                     await sh.delete_row(row_name)  # clear message data
                     await remove_reaction(payload.channel_id, payload.message_id, "🥂", False)

@@ -18,7 +18,8 @@ role_dict_reaction = {
     "F": "PR",
     "H": "CLRD",
     "J": "TS",
-    "L": "QC"
+    "L": "QC",
+    "N": "UPD"
 }
 load_dotenv()
 staffsheet = os.getenv("STAFF")
@@ -220,7 +221,8 @@ async def write(data, status):
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
-        value = sheets.values().get(spreadsheetId=datasheet, range=f"{sheet_name}!A:A").execute()
+        value = sheets.values().get(spreadsheetId=datasheet, range=f"{sheet_name}!A3:N3").execute()
+        print(value)
 
         for i, row in enumerate(value['values'], start=1):
             if row and row[0] == chapter:
@@ -241,6 +243,7 @@ async def write(data, status):
         if chapter_index is not None:
             value = sheets.values().get(spreadsheetId=datasheet,
                                         range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}").execute()
+            print(value)
             sheets.values().update(spreadsheetId=datasheet,
                                    range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}",
                                    valueInputOption="USER_ENTERED",
