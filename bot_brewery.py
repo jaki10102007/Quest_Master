@@ -95,10 +95,10 @@ async def on_raw_reaction_add(payload):
                         role = role_dict_reaction[role]
                     await assignmentlog.send(
                         f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | **Done** | {data[4]}")
-                    if role == "UPD":
-                        await sh.write(data, "")
-                    else:
-                        await sh.write(data, "Done")
+                    #if role == "UPD":
+                    #    await sh.write(data, "")
+                    #else:
+                    #    await sh.write(data, "Done")
                     await sh.write(data, "Done")
                     await sh.delete_row(row_name)  # clear message data
                     await remove_reaction(payload.channel_id, payload.message_id, "🥂", False)
