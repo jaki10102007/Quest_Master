@@ -221,7 +221,7 @@ async def write(data, status):
     try:
         service = build("sheets", "v4", credentials=credential)
         sheets = service.spreadsheets()
-        value = sheets.values().get(spreadsheetId=datasheet, range=f"{sheet_name}!A3:N3").execute()
+        value = sheets.values().get(spreadsheetId=datasheet, range=f"{sheet_name}!A:A").execute()
         print(value)
 
         for i, row in enumerate(value['values'], start=1):

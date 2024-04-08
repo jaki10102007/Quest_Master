@@ -43,7 +43,7 @@ role_dict = {
     "CLRD": ("H", "I"),
     "TS": ("J", "K"),
     "QC": ("L", "M"),
-    "UPD" : ("N", "O")
+    "UPD": ("N", "O")
 }
 role_dict_reaction = {
     "B": "RP",
@@ -95,9 +95,9 @@ async def on_raw_reaction_add(payload):
                         role = role_dict_reaction[role]
                     await assignmentlog.send(
                         f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | **Done** | {data[4]}")
-                    #if role == "UPD":
+                    # if role == "UPD":
                     #    await sh.write(data, "")
-                    #else:
+                    # else:
                     #    await sh.write(data, "Done")
                     await sh.write(data, "Done")
                     await sh.delete_row(row_name)  # clear message data
@@ -149,6 +149,7 @@ async def on_raw_reaction_add(payload):
             else:
                 return
             await sh.oneshot(payload.message_id, role)
+
 
 @bot.event
 async def on_member_join(member):
@@ -220,6 +221,8 @@ async def say(interaction: discord.Interaction, arg: str):
     roles = await bot.guildstuff.fetch_member(int(arg))
     print(roles)
     await interaction.response.send_message(f"Hey{interaction.user.mention}, test 2, {user}")
+
+
 @bot.tree.command(name="oneshot")
 @app_commands.describe(series="# of the series")
 async def oneshot(interaction: discord.Interaction, series: str):
@@ -235,9 +238,10 @@ async def oneshot(interaction: discord.Interaction, series: str):
     series = sh.getsheetname(series)
     await interaction.followup.send("Done")
 
+
 @bot.tree.command(name="assign")
 @app_commands.describe(series="# of the series", chapter="What chapter", role="What needs to be done", who="Who")
-async def assign(interaction: discord.Interaction, series: str, chapter: str,role: str, who: str):
+async def assign(interaction: discord.Interaction, series: str, chapter: str, role: str, who: str):
     await interaction.response.defer(ephemeral=True)
     target_channel = bot.get_channel(ASSIGNMENT_CHANNEL)
     member = interaction.guild.get_member(int(who[2:-1]))
@@ -249,19 +253,16 @@ async def assign(interaction: discord.Interaction, series: str, chapter: str,rol
         first, second = role_dict[role.upper()]
     if first is None:
         await interaction.followup.send(f" '{role.upper()}' is not a valid Role ", ephemeral=True)
-    else:
-        logging.error(f"Role {role} is not valid")
         ## One SHot ##
     if required_role not in member.roles:
 
-
-                message = await target_channel.send(f"{series}| CH {chapter} | {role} | {who}")
-                data = [await sh.getsheetname(series), chapter, first, second, who]
-                await sh.store(message.id, data[0], chapter, who, first, second)
-                await sh.write(data, "Assigned")
-                await interaction.followup.send(content="Assigned")
-                await message.add_reaction("✅")
-                await message.add_reaction("❌")
+        message = await target_channel.send(f"{series}| CH {chapter} | {role} | {who}")
+        data = [await sh.getsheetname(series), chapter, first, second, who]
+        await sh.store(message.id, data[0], chapter, who, first, second)
+        await sh.write(data, "Assigned")
+        await interaction.followup.send(content="Assigned")
+        await message.add_reaction("✅")
+        await message.add_reaction("❌")
     else:
         await interaction.followup.send(f"{who} is on Hiatus", ephemeral=True)
 @bot.tree.command(name="bulkassign")
