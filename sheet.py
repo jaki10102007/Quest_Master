@@ -243,11 +243,16 @@ async def write(data, status):
         if chapter_index is not None:
             value = sheets.values().get(spreadsheetId=datasheet,
                                         range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}").execute()
-            print(value)
-            sheets.values().update(spreadsheetId=datasheet,
-                                   range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}",
-                                   valueInputOption="USER_ENTERED",
-                                   body={'values': [[await getuser(user), status]]}).execute()
+            if first == "N":
+                sheets.values().update(spreadsheetId=datasheet,
+                                       range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}",
+                                       valueInputOption="USER_ENTERED",
+                                       body={'values': [[True, ""]]}).execute()
+            else:
+                sheets.values().update(spreadsheetId=datasheet,
+                                       range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}",
+                                       valueInputOption="USER_ENTERED",
+                                       body={'values': [[await getuser(user), status]]}).execute()
 
 
 
