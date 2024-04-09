@@ -1,4 +1,15 @@
-from datetime import datetime
-current_time = datetime.now().date().strftime("%Y-%m-%d")
+role = "rp"
+role_dict = {
+    "RP": ("B", "C"),
+    "TL": ("D", "E"),
+    "PR": ("F", "G"),
+    "CLRD": ("H", "I"),
+    "TS": ("J", "K"),
+    "QC": ("L", "M"),
+    "UPD" : ("N", "O")
+}
 
-print(current_time)
+if role.upper() in role_dict:
+    first, second = role_dict[role.upper()]
+    print(first)
+    print(second)
