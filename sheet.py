@@ -156,7 +156,8 @@ async def check_old_entries(bot):
                         message = await channel.send(
                             f"Hey, {user}! You accepted an assignment on {date_only} for {series} CH {chapter} ({role}). The deadline for this is tomorrow. Will you be able to finish it by then?")
                         sheets.values().update(spreadsheetId=datasheet, range=f"DATA!M{i}:M{i}",
-                                               valueInputOption="USER_ENTERED", body={'values': [[str(message.id)]]}).execute()
+                                               valueInputOption="USER_ENTERED",
+                                               body={'values': [[str(message.id)]]}).execute()
                         await message.add_reaction("✅")
                         await message.add_reaction("<:no:1225574648088105040>")
                         await message.add_reaction("❌")
@@ -191,6 +192,7 @@ async def getmessageid(id):
 async def remove_due_date(row):
     sheets.values().update(spreadsheetId=datasheet, range=f"DATA!M{row}:M{row}",
                            valueInputOption="USER_ENTERED", body={'values': [[""]]}).execute()
+
 
 async def getmessageid_due_date(id):
     name = None
@@ -244,10 +246,11 @@ async def write(data, status):
             value = sheets.values().get(spreadsheetId=datasheet,
                                         range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}").execute()
             if first == "N":
-                sheets.values().update(spreadsheetId=datasheet,
-                                       range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}",
-                                       valueInputOption="USER_ENTERED",
-                                       body={'values': [[True, ""]]}).execute()
+                if status == "Done":
+                    sheets.values().update(spreadsheetId=datasheet,
+                                           range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}",
+                                           valueInputOption="USER_ENTERED",
+                                           body={'values': [[True, ""]]}).execute()
             else:
                 sheets.values().update(spreadsheetId=datasheet,
                                        range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}",
