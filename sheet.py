@@ -25,6 +25,7 @@ load_dotenv()
 staffsheet = os.getenv("STAFF")
 datasheet = os.getenv("DATA")
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+ID = os.getenv("ID")
 # credential = Credentials.from_authorized_user_file("token.json", SCOPES)
 credential = Credentials.from_service_account_file('service_account.json', scopes=SCOPES)
 credential = service_account.Credentials.from_service_account_file(
@@ -356,14 +357,36 @@ async def getchannelid(sheet):
         logging.error(error)
 
 
-async def delete_row(row_index): # doesn't actualy delet just makes it blank need to fix that
+#async def delete_row(row_index): # doesn't actualy delet just makes it blank need to fix that
+    # await checkcred()
+    #service = build("sheets", "v4", credentials=credential)
+    #sheets = service.spreadsheets()
+    #sheets.values().update(spreadsheetId=datasheet, range=f"DATA!{row_index}:{row_index}",
+    #                       valueInputOption="USER_ENTERED", body={'values': [
+    #        ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]]}).execute()
+async def delete_row(row_index):
     # await checkcred()
     service = build("sheets", "v4", credentials=credential)
     sheets = service.spreadsheets()
-    sheets.values().update(spreadsheetId=datasheet, range=f"DATA!{row_index}:{row_index}",
-                           valueInputOption="USER_ENTERED", body={'values': [
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]]}).execute()
 
+    request = sheets.batchUpdate(
+        spreadsheetId=datasheet,
+        body={
+            'requests': [
+                {
+                    'deleteDimension': {
+                        'range': {
+                            'sheetId': ID,  # Replace with your sheet ID
+                            'dimension': 'ROWS',
+                            'startIndex': row_index - 1,
+                            'endIndex': row_index
+                        }
+                    }
+                }
+            ]
+        }
+    )
+    response = request.execute()
 
 async def get_sheet_id_by_name(spreadsheet_id, sheet_name):
     service = build('sheets', 'v4', credentials=credential)
@@ -372,4 +395,10 @@ async def get_sheet_id_by_name(spreadsheet_id, sheet_name):
         if sheet['properties']['title'] == sheet_name:
             print(sheet['properties']['sheetId'])
 
-# get_sheet_id_by_name(datasheet, "DATA")
+
+async def main():
+    await get_sheet_id_by_name(datasheet, "DATA")
+
+# Python 3.7+
+import asyncio
+asyncio.run(main())
