@@ -356,13 +356,13 @@ async def getchannelid(sheet):
         logging.error(error)
 
 
-async def delete_row(row_index):
+async def delete_row(row_index): # doesn't actualy delet just makes it blank need to fix that
     # await checkcred()
     service = build("sheets", "v4", credentials=credential)
     sheets = service.spreadsheets()
     sheets.values().update(spreadsheetId=datasheet, range=f"DATA!{row_index}:{row_index}",
                            valueInputOption="USER_ENTERED", body={'values': [
-            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]]}).execute()
+            ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]]}).execute()
 
 
 async def get_sheet_id_by_name(spreadsheet_id, sheet_name):
