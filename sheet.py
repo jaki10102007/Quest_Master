@@ -364,7 +364,7 @@ async def getchannelid(sheet):
     #sheets.values().update(spreadsheetId=datasheet, range=f"DATA!{row_index}:{row_index}",
     #                       valueInputOption="USER_ENTERED", body={'values': [
     #        ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]]}).execute()
-async def delete_row(row_index): # delets the row in the sheet "Data"
+async def delete_row(row_index): # delets the row in the sheet "Data" ...
     # await checkcred()
     service = build("sheets", "v4", credentials=credential)
     sheets = service.spreadsheets()
