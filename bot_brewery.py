@@ -56,7 +56,22 @@ role_dict_reaction = {
     "N": "UPD"
 }
 
-bot = commands.Bot(command_prefix='$', intents=discord.Intents.all())
+bot = commands.Bot(command_prefix='$', intents=discord.Intents.all()) # Initialize bot with a command prefix
+bot.remove_command('help') # Remove the default help command
+
+# Define the custom help command
+@bot.command(name='help') 
+async def custom_help(ctx):
+    help_text = """
+    **Custom Help**
+    - `$foo <arg>`: Echoes the argument.
+    - `/assign <series> <chapter> <role> <who>`: Assigns a task.
+    - `/oneshot <series>`: Creates a oneshot assignment.
+    - `/channel <channel> <sheet>`: Assigns a channel to a sheet.
+    - `/create <channelname> <sheet>`: Creates a new channel.
+    (Add more as needed)
+    """
+    await ctx.send(help_text)
 
 
 # Bot events #
