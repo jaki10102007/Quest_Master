@@ -1,0 +1,18 @@
+Quest_Master/
+│
+├── cogs/                        # Directory for command groups (cogs)
+│   ├── admin_commands.py        # Admin-related commands
+│   ├── interaction_commands.py  # User interaction commands
+|   ├── help_command.py          # Custom help command logic
+│   └── ...                      # Other cogs as needed
+│
+├── utils/                       # Utilities and helper functions
+│   └── utils.py                 # Utility functions like remove_reaction, etc.
+│
+├── event_handlers.py            # Event handlers (on_ready, on_member_join, etc.)
+├── config.py                    # Configuration settings, e.g., tokens, channel IDs
+├── bot_brewery.py               # Main bot file where everything is tied together
+├── sheet.py                     # Google Sheets interaction logic
+│
+├── .env                         # Environment variables (TOKEN, Google Sheets credentials, etc.)
+└── requirements.txt             # Python package dependencies
