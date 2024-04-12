@@ -63,13 +63,13 @@ bot = commands.Bot(command_prefix='$', intents=discord.Intents.all())
 async def on_ready():
     logger.info(f'{bot.user} has connected to Discord!')
     check_old_entries.start()
-    global guildstuff
-    guildstuff = bot.fetch_guild(1218035430373462016)
     try:
+        global guildstuff
+        guildstuff = await bot.fetch_guild(1218035430373462016)
         synced = await bot.tree.sync()
         logger.info(f"Synced {len(synced)} command(s)")
     except Exception as e:
-        logger.error(e)
+        logger.error(f"Failed to sync commands: {e}")
 
 
 @bot.event

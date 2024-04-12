@@ -1,15 +1,17 @@
 import os
+import logging
+from datetime import datetime, timedelta
 from google.auth.transport.requests import Request
 # from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
-import logging
 import math
 from google.oauth2.service_account import Credentials
 from google.oauth2 import service_account
-from datetime import datetime, timedelta
+
+logging.basicConfig(level=logging.INFO, filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 role_dict_reaction = {
@@ -26,7 +28,6 @@ staffsheet = os.getenv("STAFF")
 datasheet = os.getenv("DATA")
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
 # credential = Credentials.from_authorized_user_file("token.json", SCOPES)
-credential = Credentials.from_service_account_file('service_account.json', scopes=SCOPES)
 credential = service_account.Credentials.from_service_account_file(
     "service_account.json", scopes=SCOPES)
 # Create a single Google Sheets service object
@@ -35,8 +36,6 @@ sheets = service.spreadsheets()
 logging.info("staffsheet: " + staffsheet)
 logging.info("datasheet: " + datasheet)
 logging.info("SPREADSHEET_ID: " + SPREADSHEET_ID)
-service = build("sheets", "v4", credentials=credential)
-sheets = service.spreadsheets()
 
 
 async def channelid(channel, name):
