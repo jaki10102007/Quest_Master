@@ -9,6 +9,7 @@ import sys
 from requests import get
 from discord.ext import tasks
 from datetime import datetime, timedelta
+import asyncio
 
 # Logging #
 logger = logging.getLogger(__name__)
@@ -154,6 +155,23 @@ async def on_raw_reaction_add(payload):
 @bot.event
 async def on_member_join(member):
     await sh.findid(member.name, str(member.id))
+
+@bot.event
+async def on_disconnect():
+    logger.warning("Bot has disconnected from Discord.")
+
+@bot.event
+async def on_resumed():
+    logger.info("Bot has reconnected and resumed operations.")
+
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.send('Command does not exist.')
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send('Missing a required argument.')
+    else:
+        await ctx.send('An error occurred while processing the command.')
 
 
 # Helper functions #
