@@ -27,6 +27,8 @@ load_dotenv()
 staffsheet = os.getenv("STAFF")
 datasheet = os.getenv("DATA")
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+if SPREADSHEET_ID is None:
+    logging.error("Failed to load SPREADSHEET_ID from environment variables.")
 # credential = Credentials.from_authorized_user_file("token.json", SCOPES)
 credential = service_account.Credentials.from_service_account_file(
     "service_account.json", scopes=SCOPES)
@@ -44,7 +46,7 @@ async def channelid(channel, name):
                                valueInputOption="USER_ENTERED", body={'values': [
                 [name, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", id]]}).execute()
     except HttpError as error:
-        logging.error(error)
+        logging.error(f"Failed to append values in channelid function: {error}")
 
 
 async def copy(name):
