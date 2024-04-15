@@ -1,21 +1,17 @@
 import discord
-from discord import app_commands
 from discord.ext import commands
 import sheet as sh
 from logger import setup_logger
-from config import TOKEN, COMMAND_PREFIX, BOT_ID, ASSIGNMENT_CHANNEL, CHECKUP_CHANNEL, ONESHOT_CHANNEL, COMMAND_PREFIX, role_dict, role_dict_reaction
-import os
+from config import TOKEN, BOT_ID, ASSIGNMENT_CHANNEL, CHECKUP_CHANNEL, ONESHOT_CHANNEL, COMMAND_PREFIX, role_dict, role_dict_reaction
 import sys
-from requests import get
 from discord.ext import tasks
 from datetime import datetime, timedelta
 import asyncio
-from cogs.help_command import HelpCommand
-from cogs.bot_commands import BotCommands
+#from cogs.help_command import HelpCommand
+#from cogs.bot_commands import BotCommands
 from utils.utils import remove_reaction, delete_message, select_date, reactionhelper
 from utils.event_handlers import on_ready, on_disconnect, on_resumed, on_command_error
 # from utils.event_handlers import setup_event_handlers
-
 
 # Setup logger
 logger = setup_logger(__name__)
