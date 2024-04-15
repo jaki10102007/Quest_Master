@@ -107,9 +107,14 @@ async def on_raw_reaction_add(payload):
                     await delete_message(payload.channel_id, payload.message_id)
                     await sh.delete_row(row_name)  # clear
                 elif emoji_repr == "<PartialEmoji animated=False name=':bomb:' id=None>":
-                    await delete_message(payload.channel_id, payload.message_id)
-                    await sh.delete_row(row_name)
-                    await assignmentlog.send(f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | **Deleted** | {data[4]}")
+                    guild = bot.get_guild(payload.guild_id)
+                    member = guild.fetch_member(payload.user_id)
+                    # Check if the member has the required role
+                    required_role = discord.utils.get(guild.roles, name="Tavern Keeper")
+                    if required_role in member.roles:
+                        await delete_message(payload.channel_id, payload.message_id)
+                        await sh.delete_row(row_name)
+                        await assignmentlog.send(f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | **Deleted** | {data[4]}")
         elif channel_id == CHECKUP_CHANNEL: # every reaction in the Hydromiter channel
             data, row_name = await sh.getmessageid_due_date(payload.message_id)
             if f"<@{payload.user_id}>" == data[4]:
