@@ -102,10 +102,14 @@ async def on_raw_reaction_add(payload):
                     await sh.write(data, "Done")
                     await sh.delete_row(row_name)  # clear message data
                     await remove_reaction(payload.channel_id, payload.message_id, "🥂", False)
-                else:
+                elif emoji_repr == "<PartialEmoji animated=False name='❌' id=None>":
                     await reactionhelper(data, assignmentlog, "Declined")
                     await delete_message(payload.channel_id, payload.message_id)
                     await sh.delete_row(row_name)  # clear
+                elif emoji_repr == "<PartialEmoji animated=False name=':bomb:' id=None>":
+                    await delete_message(payload.channel_id, payload.message_id)
+                    await sh.delete_row(row_name)
+                    await assignmentlog.send(f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | **Deleted** | {data[4]}")
         elif channel_id == CHECKUP_CHANNEL: # every reaction in the Hydromiter channel
             data, row_name = await sh.getmessageid_due_date(payload.message_id)
             if f"<@{payload.user_id}>" == data[4]:
@@ -127,7 +131,7 @@ async def on_raw_reaction_add(payload):
                     await sh.remove_due_date(row)
                     await delete_message(payload.channel_id, payload.message_id)
                     await assignmentlog.send(
-                        f"<@{payload.user_id}> has **extended** the due date for {data[0]} CH {data[1]} (Role: {role}) from {original_date} to **{due_date}**.\n"
+                        f"<@{payload.user_id}> has **extended** the due date for {data[0]} CH {data[1]} (Role: {role}) from {original_date} to **{date}**.\n"
                         f"Reason: {msg.content}")
                 elif emoji_repr == "<PartialEmoji animated=False name='❌' id=None>":
                     await reactionhelper(data, assignmentlog, "Declined")
@@ -190,7 +194,7 @@ async def select_date(user, series, chapter, role, usermention):
     await user.send('What is the reason for the delay? Please provide a brief explanation.')
     msg = await bot.wait_for('message', check=lambda m: m.author == user and isinstance(m.channel, discord.DMChannel))
     await user.send(
-        f'Thank you for letting us know! We will update the schedule accordingly. \nIf you have any questions or need'
+        f'Thank you for letting us know! We will update the schedule accordingly. \nIf you have any questions or need '
         f'further assistance, please feel free to reach out to us. \nWe appreciate your hard work and dedication to '
         f'the team!')
     return date, msg
@@ -384,6 +388,7 @@ async def foo(ctx, arg):
 # Looping tasks #
 @tasks.loop(minutes=1)
 async def check_old_entries():
+    print("checking old entries")
     await sh.check_old_entries(bot)
 
 
