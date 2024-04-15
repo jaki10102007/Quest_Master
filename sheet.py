@@ -1,17 +1,14 @@
 import os
-from google.auth.transport.requests import Request
-# from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
 import logging
 import math
-from google.oauth2.service_account import Credentials
 from google.oauth2 import service_account
 from datetime import datetime, timedelta
 
 # Load environment variables
+logging.basicConfig(level=logging.INFO, filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
 load_dotenv()
 staffsheet = os.getenv("STAFF")
 datasheet = os.getenv("DATA")
@@ -71,13 +68,6 @@ async def copy(name):
         # Append values to the new sheet
         sheets.values().update(spreadsheetId=datasheet, range=f"{name}!A1:A1", valueInputOption="USER_ENTERED",
                                body={'values': [[name]]}).execute()
-        # sheets.values().append(
-        #    spreadsheetId=datasheet,
-        #    insertDataOption="INSERT_ROWS",
-        #    range=f"3:3",
-        #    valueInputOption="USER_ENTERED",
-        #    body={'values': [[name, "","","","","","","","","","","","","","","","","", "","", "", ids]]}
-        # ).execute()
     except HttpError as error:
         logging.error(error)
 
@@ -86,25 +76,15 @@ async def findid(name, ids):
     # await checkcred()
 
     try:
-        # if "<@" in ids:
-        #    idd= ids[2:-1]
-        # else:
-        #    idd=ids
-        # idd=ids
-        # value= sheets.values().get(spreadsheetId=staffsheet, range=f"T:T").execute()
         sheets.values().append(spreadsheetId=staffsheet, insertDataOption="INSERT_ROWS", range=f"3:3",
                                valueInputOption="USER_ENTERED", body={'values': [
                 [name, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ids]]}).execute()
-        # sheets.values().append(spreadsheetId=staffsheet, insertDataOption="INSERT_ROWS" , range=f"T13:T13", valueInputOption="USER_ENTERED", body={'values': [[ids]]}).execute()
 
     except HttpError as error:
         logging.error(error)
 
 
 async def getuser(name):
-    sheet = "STAFF"
-    # await checkcred()
-
     try:
         value = sheets.values().get(spreadsheetId=staffsheet, range=f"V:V").execute()
         for i, row in enumerate(value['values'], start=1):
@@ -207,7 +187,6 @@ async def write(data, status):
     first = data[2]
     second = data[3]
     user = data[4]
-    # await checkcred()
 
     try:
         value = sheets.values().get(spreadsheetId=datasheet, range=f"{sheet_name}!A:A").execute()
@@ -244,14 +223,11 @@ async def write(data, status):
                                        valueInputOption="USER_ENTERED",
                                        body={'values': [[await getuser(user), status]]}).execute()
 
-
-
     except HttpError as error:
         logging.error(f"An error occurred: {error}")
 
 
 async def store(message_id, sheet, ch, user, f, se):
-    # await checkcred()
     try:
         sheets.values().append(spreadsheetId=datasheet, range=f"DATA!F2:K2", insertDataOption="INSERT_ROWS",
                                valueInputOption="USER_ENTERED",
@@ -261,10 +237,7 @@ async def store(message_id, sheet, ch, user, f, se):
 
 
 async def writechannel(channel_id, sheet):
-    # await checkcred()
-
     try:
-
         sheets.values().append(spreadsheetId=datasheet, insertDataOption="INSERT_ROWS", range=f"CHANNELS!3:3",
                                valueInputOption="USER_ENTERED", body={'values': [[channel_id, sheet]]}).execute()
     except HttpError as error:
@@ -272,8 +245,6 @@ async def writechannel(channel_id, sheet):
 
 
 async def updatesheet(channel_id, sheet):
-    # await checkcred()
-
     try:
         value = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!A:A").execute()
         for i, row in enumerate(value['values'], start=1):
@@ -287,8 +258,6 @@ async def updatesheet(channel_id, sheet):
 
 
 async def updatechannel_id(channel_id, sheet):
-    # await checkcred()
-
     try:
 
         value = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!B:B").execute()
@@ -303,7 +272,6 @@ async def updatechannel_id(channel_id, sheet):
 
 
 async def getsheetname(channel_id):
-    # await checkcred()
     try:
         rowd = None
         value = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!A:A").execute()
@@ -317,7 +285,6 @@ async def getsheetname(channel_id):
 
 
 async def getchannelid(sheet):
-    # await checkcred()
     try:
         rowd = None
         value = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!B:B").execute()
@@ -330,12 +297,7 @@ async def getchannelid(sheet):
         logging.error(error)
 
 
-#async def delete_row(row_index): # doesn't actualy delet just makes it blank need to fix that
-    # await checkcred()
-    #sheets.values().update(spreadsheetId=datasheet, range=f"DATA!{row_index}:{row_index}",
-    #                       valueInputOption="USER_ENTERED", body={'values': [
-    #        ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]]}).execute()
-async def delete_row(row_index): # delets the row in the sheet "Data" ...
+async def delete_row(row_index):  # delets the row in the sheet "Data" ...
     # await checkcred()
 
     request = sheets.batchUpdate(
@@ -357,8 +319,8 @@ async def delete_row(row_index): # delets the row in the sheet "Data" ...
     )
     response = request.execute()
 
+
 async def get_sheet_id_by_name(spreadsheet_id, sheet_name):
-    service = build('sheets', 'v4', credentials=credential)
     spreadsheet = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
     for sheet in spreadsheet['sheets']:
         if sheet['properties']['title'] == sheet_name:
@@ -367,7 +329,3 @@ async def get_sheet_id_by_name(spreadsheet_id, sheet_name):
 
 async def main():
     await get_sheet_id_by_name(datasheet, "DATA")
-
-# Python 3.7+
-import asyncio
-asyncio.run(main())
