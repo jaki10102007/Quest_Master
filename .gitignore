@@ -2,3 +2,8 @@
 token.json
 bot.py
 example.log
+service_account.json
+.DS_Store
+__pycache__
+.log
+.pyc
