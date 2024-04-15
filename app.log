@@ -1,0 +1,15 @@
+googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+root - INFO - staffsheet: 1cWqgmd_GWVQtUvFA3svZzXwuyTEm3mO65T5fwiKyF0w
+root - INFO - datasheet: 1lGgT1J-Od3PRvgmBQlCwsc112Ghai1b2MpnLBvIUSdw
+root - INFO - SPREADSHEET_ID: 1gX_aDJohneNbZ93Gzl281aMo_WvRd4E-i69bk0L4FVY
+discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+discord.client - INFO - logging in using static token
+discord.gateway - INFO - Shard ID None has connected to Gateway (Session ID: db8c12d5641dfdccf74f8f7dd042e49d).
+discord.client - ERROR - Ignoring exception in on_ready
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/discord/client.py", line 441, in _run_event
+    await coro(*args, **kwargs)
+  File "/Users/lianaharvilla/Dropbox/Mac/Documents/GitHub/Quest_Master/bot_brewery.py", line 31, in on_ready
+    await on_ready(bot)
+          ^^^^^^^^^^^^^
+TypeError: on_ready() takes 0 positional arguments but 1 was given

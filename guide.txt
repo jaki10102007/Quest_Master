@@ -1,15 +1,15 @@
 Quest_Master/
 │
-├── cogs/                        # Directory for command groups (cogs)
+├── cogs/                        # Directory for command groups (cogs) https://discordpy.readthedocs.io/en/stable/ext/commands/cogs.html
 │   ├── admin_commands.py        # Admin-related commands
-│   ├── interaction_commands.py  # User interaction commands
+│   ├── interaction_commands.py  # User interaction commands (Right now this is just combined into 1 commands.py but can be changed later on if that's easier)
 |   ├── help_command.py          # Custom help command logic
 │   └── ...                      # Other cogs as needed
 │
 ├── utils/                       # Utilities and helper functions
+|   ├── event_handlers.py        # Event handlers (on_ready, on_member_join, etc.)
 │   └── utils.py                 # Utility functions like remove_reaction, etc.
 │
-├── event_handlers.py            # Event handlers (on_ready, on_member_join, etc.)
 ├── config.py                    # Configuration settings, e.g., tokens, channel IDs
 ├── bot_brewery.py               # Main bot file where everything is tied together
 ├── sheet.py                     # Google Sheets interaction logic
