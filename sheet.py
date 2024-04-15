@@ -1,21 +1,14 @@
 import os
+import logging
+from datetime import datetime, timedelta
 from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
-import logging
 import math
 from google.oauth2 import service_account
-from datetime import datetime, timedelta
 
-# Load environment variables
 logging.basicConfig(level=logging.INFO, filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
-load_dotenv()
-staffsheet = os.getenv("STAFF")
-datasheet = os.getenv("DATA")
-SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
-ID = os.getenv("ID")
 
-# Define scopes and roles
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 role_dict_reaction = {
     "B": "RP",
@@ -26,8 +19,10 @@ role_dict_reaction = {
     "L": "QC",
     "N": "UPD"
 }
-
-# Setup credentials and services
+load_dotenv()
+staffsheet = os.getenv("STAFF")
+datasheet = os.getenv("DATA")
+SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
 credential = service_account.Credentials.from_service_account_file(
     "service_account.json", scopes=SCOPES)
 service = build("sheets", "v4", credentials=credential)
@@ -40,7 +35,7 @@ async def channelid(channel, name):
                                valueInputOption="USER_ENTERED", body={'values': [
                 [name, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", id]]}).execute()
     except HttpError as error:
-        logging.error(error)
+        logging.error(f"Failed to append values in channelid function: {error}")
 
 
 async def copy(name):
@@ -73,7 +68,6 @@ async def copy(name):
 
 
 async def findid(name, ids):
-    # await checkcred()
 
     try:
         sheets.values().append(spreadsheetId=staffsheet, insertDataOption="INSERT_ROWS", range=f"3:3",
@@ -259,7 +253,6 @@ async def updatesheet(channel_id, sheet):
 
 async def updatechannel_id(channel_id, sheet):
     try:
-
         value = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!B:B").execute()
         for i, row in enumerate(value['values'], start=1):
             if row and row[0] == f"{sheet}":
@@ -327,5 +320,5 @@ async def get_sheet_id_by_name(spreadsheet_id, sheet_name):
             print(sheet['properties']['sheetId'])
 
 
-async def main():
-    await get_sheet_id_by_name(datasheet, "DATA")
+#async def main():
+#    await get_sheet_id_by_name(datasheet, "DATA")
