@@ -59,7 +59,7 @@ bot = commands.Bot(command_prefix='$', intents=discord.Intents.all())
 
 
 # Bot events #
-@bot.event
+@bot.event  # Will start when the bot it ready
 async def on_ready():
     logger.info(f'{bot.user} has connected to Discord!')
     check_old_entries.start()
@@ -79,7 +79,7 @@ async def on_raw_reaction_add(payload):
     print(repr(payload.emoji))
     if payload.user_id != BOT_ID:  # Checks so it's not the bot reacting
         emoji_repr = repr(payload.emoji)
-        if (channel_id == ASSIGNMENT_CHANNEL):
+        if channel_id == ASSIGNMENT_CHANNEL: # everything in the assignment channel inside this if clause
             data, row_name = await sh.getmessageid(payload.message_id)
             if f"<@{payload.user_id}>" == data[4]:
 
@@ -106,7 +106,7 @@ async def on_raw_reaction_add(payload):
                     await reactionhelper(data, assignmentlog, "Declined")
                     await delete_message(payload.channel_id, payload.message_id)
                     await sh.delete_row(row_name)  # clear
-        elif channel_id == CHECKUP_CHANNEL:
+        elif channel_id == CHECKUP_CHANNEL: # every reaction in the Hydromiter channel
             data, row_name = await sh.getmessageid_due_date(payload.message_id)
             if f"<@{payload.user_id}>" == data[4]:
 

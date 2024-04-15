@@ -11,6 +11,14 @@ from google.oauth2.service_account import Credentials
 from google.oauth2 import service_account
 from datetime import datetime, timedelta
 
+# Load environment variables
+load_dotenv()
+staffsheet = os.getenv("STAFF")
+datasheet = os.getenv("DATA")
+SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+ID = os.getenv("ID")
+
+# Define scopes and roles
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 role_dict_reaction = {
     "B": "RP",
@@ -21,26 +29,16 @@ role_dict_reaction = {
     "L": "QC",
     "N": "UPD"
 }
-load_dotenv()
-staffsheet = os.getenv("STAFF")
-datasheet = os.getenv("DATA")
-SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
-ID = os.getenv("ID")
-# credential = Credentials.from_authorized_user_file("token.json", SCOPES)
-credential = Credentials.from_service_account_file('service_account.json', scopes=SCOPES)
+
+# Setup credentials and services
 credential = service_account.Credentials.from_service_account_file(
     "service_account.json", scopes=SCOPES)
-logging.info("staffsheet: " + staffsheet)
-logging.info("datasheet: " + datasheet)
-logging.info("SPREADSHEET_ID: " + SPREADSHEET_ID)
 service = build("sheets", "v4", credentials=credential)
 sheets = service.spreadsheets()
 
 
 async def channelid(channel, name):
     try:
-        service = build("sheets", "v4", credentials=credential)
-        sheets = service.spreadsheets()
         sheets.values().append(spreadsheetId=staffsheet, insertDataOption="INSERT_ROWS", range=f"3:3",
                                valueInputOption="USER_ENTERED", body={'values': [
                 [name, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", id]]}).execute()
@@ -50,8 +48,6 @@ async def channelid(channel, name):
 
 async def copy(name):
     try:
-        service = build("sheets", "v4", credentials=credential)
-        sheets = service.spreadsheets()
 
         # Get the spreadsheet
         spreadsheet = sheets.get(spreadsheetId=datasheet).execute()
@@ -90,8 +86,6 @@ async def findid(name, ids):
     # await checkcred()
 
     try:
-        service = build("sheets", "v4", credentials=credential)
-        sheets = service.spreadsheets()
         # if "<@" in ids:
         #    idd= ids[2:-1]
         # else:
@@ -112,8 +106,6 @@ async def getuser(name):
     # await checkcred()
 
     try:
-        service = build("sheets", "v4", credentials=credential)
-        sheets = service.spreadsheets()
         value = sheets.values().get(spreadsheetId=staffsheet, range=f"V:V").execute()
         for i, row in enumerate(value['values'], start=1):
             if row and f"<@{row[0]}>" == f"{name}":
@@ -177,8 +169,6 @@ async def getmessageid(id):
     name = None
     # await checkcred()
     try:
-        service = build("sheets", "v4", credentials=credential)
-        sheets = service.spreadsheets()
         value = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!F:F").execute()
         for i, row in enumerate(value['values'], start=1):
             if row and f"{row[0]}" == f"{id}":
@@ -198,8 +188,6 @@ async def remove_due_date(row):
 async def getmessageid_due_date(id):
     name = None
     try:
-        service = build("sheets", "v4", credentials=credential)
-        sheets = service.spreadsheets()
         value = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!M:M").execute()
         for i, row in enumerate(value['values'], start=1):
             if row and f"{row[0]}" == f"{id}":
@@ -222,8 +210,6 @@ async def write(data, status):
     # await checkcred()
 
     try:
-        service = build("sheets", "v4", credentials=credential)
-        sheets = service.spreadsheets()
         value = sheets.values().get(spreadsheetId=datasheet, range=f"{sheet_name}!A:A").execute()
         print(value)
 
@@ -267,8 +253,6 @@ async def write(data, status):
 async def store(message_id, sheet, ch, user, f, se):
     # await checkcred()
     try:
-        service = build("sheets", "v4", credentials=credential)
-        sheets = service.spreadsheets()
         sheets.values().append(spreadsheetId=datasheet, range=f"DATA!F2:K2", insertDataOption="INSERT_ROWS",
                                valueInputOption="USER_ENTERED",
                                body={'values': [[str(message_id), sheet, ch, f, se, str(user)]]}).execute()
@@ -280,8 +264,6 @@ async def writechannel(channel_id, sheet):
     # await checkcred()
 
     try:
-        service = build("sheets", "v4", credentials=credential)
-        sheets = service.spreadsheets()
 
         sheets.values().append(spreadsheetId=datasheet, insertDataOption="INSERT_ROWS", range=f"CHANNELS!3:3",
                                valueInputOption="USER_ENTERED", body={'values': [[channel_id, sheet]]}).execute()
@@ -293,9 +275,6 @@ async def updatesheet(channel_id, sheet):
     # await checkcred()
 
     try:
-        service = build("sheets", "v4", credentials=credential)
-        sheets = service.spreadsheets()
-
         value = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!A:A").execute()
         for i, row in enumerate(value['values'], start=1):
             if row and row[0] == f"{channel_id}":
@@ -311,8 +290,6 @@ async def updatechannel_id(channel_id, sheet):
     # await checkcred()
 
     try:
-        service = build("sheets", "v4", credentials=credential)
-        sheets = service.spreadsheets()
 
         value = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!B:B").execute()
         for i, row in enumerate(value['values'], start=1):
@@ -328,8 +305,6 @@ async def updatechannel_id(channel_id, sheet):
 async def getsheetname(channel_id):
     # await checkcred()
     try:
-        service = build("sheets", "v4", credentials=credential)
-        sheets = service.spreadsheets()
         rowd = None
         value = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!A:A").execute()
         for i, row in enumerate(value['values'], start=1):
@@ -344,8 +319,6 @@ async def getsheetname(channel_id):
 async def getchannelid(sheet):
     # await checkcred()
     try:
-        service = build("sheets", "v4", credentials=credential)
-        sheets = service.spreadsheets()
         rowd = None
         value = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!B:B").execute()
         for i, row in enumerate(value['values'], start=1):
@@ -359,15 +332,11 @@ async def getchannelid(sheet):
 
 #async def delete_row(row_index): # doesn't actualy delet just makes it blank need to fix that
     # await checkcred()
-    #service = build("sheets", "v4", credentials=credential)
-    #sheets = service.spreadsheets()
     #sheets.values().update(spreadsheetId=datasheet, range=f"DATA!{row_index}:{row_index}",
     #                       valueInputOption="USER_ENTERED", body={'values': [
     #        ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]]}).execute()
 async def delete_row(row_index): # delets the row in the sheet "Data" ...
     # await checkcred()
-    service = build("sheets", "v4", credentials=credential)
-    sheets = service.spreadsheets()
 
     request = sheets.batchUpdate(
         spreadsheetId=datasheet,
