@@ -1,14 +1,10 @@
-from discord.ext import commands
 import discord
 from discord import app_commands
 from discord.ext import commands
 import sheet as sh
 from requests import get
-from discord.ext import tasks
-from datetime import datetime, timedelta
-import asyncio
 from logger import setup_logger
-from config import BOT_ID, ASSIGNMENT_CHANNEL, CHECKUP_CHANNEL, ONESHOT_CHANNEL, role_dict, role_dict_reaction
+from config import ASSIGNMENT_CHANNEL, ONESHOT_CHANNEL, role_dict
 
 #Create a logger for the cog
 logger = setup_logger(__name__)
