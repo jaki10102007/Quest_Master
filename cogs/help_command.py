@@ -1,13 +1,4 @@
-import discord
-from discord import app_commands
 from discord.ext import commands
-import sheet as sh
-from dotenv import load_dotenv
-from requests import get
-from discord.ext import tasks
-from datetime import datetime, timedelta
-from config import BOT_ID, ASSIGNMENT_CHANNEL, CHECKUP_CHANNEL, ONESHOT_CHANNEL, role_dict, role_dict_reaction
-
 
 class HelpCommand(commands.Cog):
     def __init__(self, bot):
