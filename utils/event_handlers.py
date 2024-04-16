@@ -12,8 +12,6 @@ async def bot_ready(bot):
     logger.info(f'{bot.user} has connected to Discord!')
     #check_old_entries.start()
     try:
-        global guildstuff
-        guildstuff = await bot.fetch_guild(1218035430373462016)
         synced = await bot.tree.sync()
         logger.info(f"Synced {len(synced)} command(s)")
     except Exception as e:
