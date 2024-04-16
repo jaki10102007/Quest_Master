@@ -13,10 +13,13 @@ async def remove_reaction(bot, channel_id, message_id, emoji, add):
         await message.add_reaction("🥂")
 
 
-async def delete_message(bot, channel_id, message_id):
+async def delete_message(bot, channel_id, message_id, delete_after=None):
     channel = bot.get_channel(int(channel_id))
     message = await channel.fetch_message(int(message_id))
-    await message.delete()
+    if delete_after is not None:
+        await message.delete(delay=delete_after)
+    else:
+        await message.delete()
 
 
 async def select_date(bot, user, series, chapter, role, usermention):
