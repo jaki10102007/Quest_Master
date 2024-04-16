@@ -1,21 +1,16 @@
-import discord
-from discord import app_commands
 from discord.ext import commands
 import sheet as sh
-from dotenv import load_dotenv
-from requests import get
-from discord.ext import tasks
-from datetime import datetime, timedelta
 from logger import setup_logger
+from bot_brewery import check_old_entries
 
 logger = setup_logger(__name__)
 
 setup_event_handlers = {}
 
 
-async def on_ready(bot):
+async def bot_ready(bot):
     logger.info(f'{bot.user} has connected to Discord!')
-    sh.check_old_entries.start()
+    #check_old_entries.start()
     try:
         global guildstuff
         guildstuff = await bot.fetch_guild(1218035430373462016)
@@ -25,18 +20,18 @@ async def on_ready(bot):
         logger.error(f"Failed to sync commands: {e}")
 
 
-async def on_disconnect(bot):
+async def bot_disconnect(bot):
     logger.warning("Bot has disconnected from Discord.")
     # ... rest of your on_ready code ...
 
 
-async def on_resumed(bot):
+async def bot_resumed(bot):
     logger.info("Bot has reconnected and resumed operations.")
     # ... rest of your on_disconnect code ...
 
 
 # Handles errors triggered during command invocation
-async def on_command_error(ctx, error):
+async def bot_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
         await ctx.send('Command does not exist.')
     elif isinstance(error, commands.MissingRequiredArgument):
