@@ -1,17 +1,11 @@
 import discord
-from discord.ext import commands
-import sheet as sh
-from logger import setup_logger
 from config import TOKEN, BOT_ID, ASSIGNMENT_CHANNEL, CHECKUP_CHANNEL, ONESHOT_CHANNEL, COMMAND_PREFIX, role_dict, role_dict_reaction
 import sys
 from discord.ext import tasks
 from datetime import datetime, timedelta
 import asyncio
-#from cogs.help_command import HelpCommand
-#from cogs.bot_commands import BotCommands
 from utils.utils import remove_reaction, delete_message, select_date, reactionhelper
-from utils.event_handlers import on_ready, on_disconnect, on_resumed, on_command_error
-# from utils.event_handlers import setup_event_handlers
+from utils.event_handlers import *
 
 # Setup logger
 logger = setup_logger(__name__)
@@ -24,35 +18,35 @@ bot = commands.Bot(command_prefix=COMMAND_PREFIX, intents=discord.Intents.all())
 # Attach event handlers
 @bot.event
 async def on_ready():
-    await on_ready(bot)
+    await bot_ready(bot)
 
 @bot.event
 async def on_disconnect():
-    await on_disconnect(bot)
+    await bot_disconnect(bot)
 
 @bot.event
 async def on_resumed():
-    await on_resumed(bot)
+    await bot_resumed(bot)
 
 @bot.event
 async def on_command_error(ctx, error):
-    await on_command_error(ctx, error)
+    await bot_command_error(ctx, error)
 
 @bot.event
 async def on_raw_reaction_add(payload):
+    logger.info(payload.emoji)
+    logger.info(repr(payload.emoji))
     assignmentlog = bot.get_channel(1219030657955794954)
     channel_id = payload.channel_id
-    print(repr(payload.emoji))
     if payload.user_id != BOT_ID:  # Checks so it's not the bot reacting
         emoji_repr = repr(payload.emoji)
         if channel_id == ASSIGNMENT_CHANNEL: # everything in the assignment channel inside this if clause
             data, row_name = await sh.getmessageid(payload.message_id)
             if f"<@{payload.user_id}>" == data[4]:
-
                 role = data[2]
                 if emoji_repr == "<PartialEmoji animated=False name='✅' id=None>":
-                    await remove_reaction(payload.channel_id, payload.message_id, "❌", True)
-                    await remove_reaction(payload.channel_id, payload.message_id, "✅", True)
+                    await remove_reaction(bot, payload.channel_id, payload.message_id, "❌", True)
+                    await remove_reaction(bot, payload.channel_id, payload.message_id, "✅", True)
                     await reactionhelper(data, assignmentlog, "Working")
                     current_time = datetime.now().date().strftime("%Y-%m-%d")
                     await sh.storetime(row_name, current_time)
@@ -67,18 +61,19 @@ async def on_raw_reaction_add(payload):
                     #    await sh.write(data, "Done")
                     await sh.write(data, "Done")
                     await sh.delete_row(row_name)  # clear message data
-                    await remove_reaction(payload.channel_id, payload.message_id, "🥂", False)
+                    await remove_reaction(bot, payload.channel_id, payload.message_id, "🥂", False)
                 elif emoji_repr == "<PartialEmoji animated=False name='❌' id=None>":
                     await reactionhelper(data, assignmentlog, "Declined")
-                    await delete_message(payload.channel_id, payload.message_id)
+                    await delete_message(bot ,payload.channel_id, payload.message_id)
                     await sh.delete_row(row_name)  # clear
-                elif emoji_repr == "<PartialEmoji animated=False name=':bomb:' id=None>":
+                elif emoji_repr == "<PartialEmoji animated=False name='💣' id=None>":
                     guild = bot.get_guild(payload.guild_id)
-                    member = guild.fetch_member(payload.user_id)
-                    # Check if the member has the required role
                     required_role = discord.utils.get(guild.roles, name="Tavern Keeper")
+                    member = guild.get_member(payload.user_id)
+                    logger.info(member.roles)
                     if required_role in member.roles:
-                        await delete_message(payload.channel_id, payload.message_id)
+                        await delete_message(bot, payload.channel_id, payload.message_id)
+                        await sh.write(data, "")
                         await sh.delete_row(row_name)
                         await assignmentlog.send(f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | **Deleted** | {data[4]}")
         elif channel_id == CHECKUP_CHANNEL: # every reaction in the Hydromiter channel
@@ -86,8 +81,8 @@ async def on_raw_reaction_add(payload):
             if f"<@{payload.user_id}>" == data[4]:
 
                 if emoji_repr == "<PartialEmoji animated=False name='✅' id=None>":
-                    await remove_reaction(payload.channel_id, payload.message_id, "❌", False)
-                    await remove_reaction(payload.channel_id, payload.message_id, "<:no:1225574648088105040>", False)
+                    await remove_reaction(bot, payload.channel_id, payload.message_id, "❌", False)
+                    await remove_reaction(bot, payload.channel_id, payload.message_id, "<:no:1225574648088105040>", False)
                 if emoji_repr == "<PartialEmoji animated=False name='no' id=1225574648088105040>":
                     row = row_name
                     user = bot.get_user(payload.user_id)
@@ -95,18 +90,17 @@ async def on_raw_reaction_add(payload):
                     original_date = data[5]
                     if role in role_dict_reaction:
                         role = role_dict_reaction[role]
-                    date, msg = await select_date(user, data[0], data[1], role, f"<@{payload.user_id}>")
+                    date, msg = await select_date(bot,user, data[0], data[1], role, f"<@{payload.user_id}>")
                     due_date = date - timedelta(days=4)
-                    print(due_date)
                     await sh.storetime(row, due_date)
                     await sh.remove_due_date(row)
-                    await delete_message(payload.channel_id, payload.message_id)
+                    await delete_message(bot, payload.channel_id, payload.message_id)
                     await assignmentlog.send(
                         f"<@{payload.user_id}> has **extended** the due date for {data[0]} CH {data[1]} (Role: {role}) from {original_date} to **{date}**.\n"
                         f"Reason: {msg.content}")
                 elif emoji_repr == "<PartialEmoji animated=False name='❌' id=None>":
                     await reactionhelper(data, assignmentlog, "Declined")
-                    await delete_message(payload.channel_id, payload.message_id)
+                    await delete_message(bot, payload.channel_id, payload.message_id)
                     await sh.delete_row(row_name)  # clear
         elif channel_id == ONESHOT_CHANNEL:
             if emoji_repr == "<PartialEmoji animated=False name='BunKill' id=1218766575302348891>":
