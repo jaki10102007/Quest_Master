@@ -36,9 +36,7 @@ class BotCommands(commands.Cog):
     @app_commands.describe(arg="what to say")
     async def say(self, interaction: discord.Interaction, arg: str):
         user = interaction.user.name
-        print(arg)
         roles = await self.bot.guildstuff.fetch_member(int(arg))
-        print(roles)
         await interaction.response.send_message(f"Hey{interaction.user.mention}, test 2, {user}")
 
 
@@ -152,7 +150,7 @@ class BotCommands(commands.Cog):
 
     @app_commands.command(name="done")
     @app_commands.describe(series="# of the Series", chapter="What chapter", role="What role")
-    async def assign(self, interaction: discord.Interaction, series: str, chapter: str, role: str):
+    async def done(self, interaction: discord.Interaction, series: str, chapter: str, role: str):
         first = None
         second = None
         target_channel_id = int("1218705159614631946")  # change to actual channel 
