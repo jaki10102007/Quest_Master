@@ -1,8 +1,7 @@
-
 import discord
 import sheet as sh
 from datetime import datetime
-from config import BOT_ID, ASSIGNMENT_CHANNEL, CHECKUP_CHANNEL, ONESHOT_CHANNEL, role_dict, role_dict_reaction
+from config import role_dict_reaction
 
 # Helper functions #
 
@@ -40,7 +39,7 @@ async def select_date(bot, user, series, chapter, role, usermention):
     return date, msg
 
 
-async def reactionhelper(bot, data, assignmentlog, status):
+async def reactionhelper(data, assignmentlog, status):
     role = data[2]
     if role in role_dict_reaction:
         role = role_dict_reaction[role]
