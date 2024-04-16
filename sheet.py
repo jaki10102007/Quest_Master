@@ -22,6 +22,7 @@ role_dict_reaction = {
 load_dotenv()
 staffsheet = os.getenv("STAFF")
 datasheet = os.getenv("DATA")
+ID= os.getenv("ID")
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
 credential = service_account.Credentials.from_service_account_file(
     "service_account.json", scopes=SCOPES)
@@ -109,7 +110,6 @@ async def check_old_entries(bot):
                 date_only = date_time.strftime("%Y-%m-%d")
                 # Check if the date and time is older than 5 days
                 if now - date_time > timedelta(days=4):
-                    print(values2[i - 1])
                     if values2[i - 1] and values2[i - 1][0] is not None:
                         pass
                     else:
@@ -184,7 +184,6 @@ async def write(data, status):
 
     try:
         value = sheets.values().get(spreadsheetId=datasheet, range=f"{sheet_name}!A:A").execute()
-        print(value)
 
         for i, row in enumerate(value['values'], start=1):
             if row and row[0] == chapter:
@@ -212,11 +211,17 @@ async def write(data, status):
                                            valueInputOption="USER_ENTERED",
                                            body={'values': [[True, ""]]}).execute()
             else:
-                sheets.values().update(spreadsheetId=datasheet,
-                                       range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}",
-                                       valueInputOption="USER_ENTERED",
-                                       body={'values': [[await getuser(user), status]]}).execute()
 
+                if status == "":
+                    sheets.values().update(spreadsheetId=datasheet,
+                                           range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}",
+                                           valueInputOption="USER_ENTERED",
+                                           body={'values': [["", status]]}).execute()
+                else:
+                    sheets.values().update(spreadsheetId=datasheet,
+                                           range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}",
+                                           valueInputOption="USER_ENTERED",
+                                           body={'values': [[await getuser(user), status]]}).execute()
     except HttpError as error:
         logging.error(f"An error occurred: {error}")
 
