@@ -1,13 +1,5 @@
-import discord
-from discord import app_commands
-from discord.ext import commands
-import sheet as sh
-import logging
 from dotenv import load_dotenv
 import os
-from requests import get
-from discord.ext import tasks
-from datetime import datetime, timedelta
 
 # Load environment variables
 load_dotenv()
