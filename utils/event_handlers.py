@@ -22,12 +22,12 @@ async def bot_ready(bot):
 
 async def bot_disconnect(bot):
     logger.warning("Bot has disconnected from Discord.")
-    # ... rest of your on_ready code ...
+    # ... rest of your on_disconnect code ...
 
 
 async def bot_resumed(bot):
     logger.info("Bot has reconnected and resumed operations.")
-    # ... rest of your on_disconnect code ...
+    # ... rest of your on_resumed code ...
 
 
 # Handles errors triggered during command invocation

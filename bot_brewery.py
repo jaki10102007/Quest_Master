@@ -136,6 +136,9 @@ async def main():
         await bot.load_extension('cogs.bot_commands') # Load your commands extension
         await bot.load_extension('cogs.help_command') # Load your help command extension
 
+        # Now sync all commands at once
+        await bot.tree.sync()
+
         check_old_entries.start() # Start the looping task
         await bot.start(TOKEN) # Start the bot
 
