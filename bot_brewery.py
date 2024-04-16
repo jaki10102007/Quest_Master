@@ -76,11 +76,12 @@ async def on_raw_reaction_add(payload):
                         await sh.write(data, "")
                         await sh.delete_row(row_name)
                         await assignmentlog.send(f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | **Deleted** | {data[4]}")
-        elif channel_id == CHECKUP_CHANNEL: # every reaction in the Hydromiter channel
+        elif channel_id == CHECKUP_CHANNEL: # every reaction in the Hydrometer channel
             data, row_name = await sh.getmessageid_due_date(payload.message_id)
             if f"<@{payload.user_id}>" == data[4]:
 
                 if emoji_repr == "<PartialEmoji animated=False name='✅' id=None>":
+                    await delete_message(bot, payload.channel_id, payload.message_id, delete_after=60)
                     await remove_reaction(bot, payload.channel_id, payload.message_id, "❌", False)
                     await remove_reaction(bot, payload.channel_id, payload.message_id, "<:no:1225574648088105040>", False)
                 if emoji_repr == "<PartialEmoji animated=False name='no' id=1225574648088105040>":
@@ -135,9 +136,6 @@ async def main():
     try:
         await bot.load_extension('cogs.bot_commands') # Load your commands extension
         await bot.load_extension('cogs.help_command') # Load your help command extension
-
-        # Now sync all commands at once
-        await bot.tree.sync()
 
         check_old_entries.start() # Start the looping task
         await bot.start(TOKEN) # Start the bot
