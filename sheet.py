@@ -6,22 +6,13 @@ from googleapiclient.discovery import build
 from dotenv import load_dotenv
 import math
 from google.oauth2 import service_account
-
+from config import role_dict_reaction
 logging.basicConfig(level=logging.INFO, filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-role_dict_reaction = {
-    "B": "RP",
-    "D": "TL",
-    "F": "PR",
-    "H": "CLRD",
-    "J": "TS",
-    "L": "QC",
-    "N": "UPD"
-}
 load_dotenv()
 staffsheet = os.getenv("STAFF")
-datasheet = os.getenv("DATA")
+datasheet = os.getenv("DATA") # Progess tracker
 ID= os.getenv("ID")
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
 credential = service_account.Credentials.from_service_account_file(
@@ -29,7 +20,24 @@ credential = service_account.Credentials.from_service_account_file(
 service = build("sheets", "v4", credentials=credential)
 sheets = service.spreadsheets()
 
-
+async def retriev_assignments(user):
+    try:
+        matching_row = []
+        value = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!K:K").execute()
+        print(value)
+        for i, row in enumerate(value['values'], start=1):
+            if row and f"{row[0]}" == f"<@{user}>":
+                matching_row.append(i)
+        ranges = [f"DATA!F{rowd}:K{rowd}" for rowd in matching_row]  # Create a list of ranges
+        data = []
+        if ranges:  # Check if there are any ranges to request
+            batch_request = sheets.values().batchGet(spreadsheetId=datasheet, ranges=ranges).execute()
+            for response in batch_request['valueRanges']:
+                data.append(response['values'])
+        logging.info(f"data is {data}")
+        return data
+    except HttpError as error:
+        logging.error(error)
 async def channelid(channel, name):
     try:
         sheets.values().append(spreadsheetId=staffsheet, insertDataOption="INSERT_ROWS", range=f"3:3",
