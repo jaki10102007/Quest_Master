@@ -11,9 +11,9 @@ logging.basicConfig(level=logging.INFO, filename='app.log', filemode='w', format
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 load_dotenv()
-staffsheet = os.getenv("STAFF")
-datasheet = os.getenv("DATA") # Progess tracker
-ID= os.getenv("ID")
+staffsheet = os.getenv("STAFF") #
+progresssheet = os.getenv("DATA") # Progess tracker
+ID= os.getenv("ID") # Used for deleting rows
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
 credential = service_account.Credentials.from_service_account_file(
     "service_account.json", scopes=SCOPES)
@@ -23,7 +23,7 @@ sheets = service.spreadsheets()
 async def retriev_assignments(user):
     try:
         matching_row = []
-        value = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!K:K").execute()
+        value = sheets.values().get(spreadsheetId=progresssheet, range=f"DATA!K:K").execute()
         print(value)
         for i, row in enumerate(value['values'], start=1):
             if row and f"{row[0]}" == f"<@{user}>":
@@ -31,7 +31,7 @@ async def retriev_assignments(user):
         ranges = [f"DATA!F{rowd}:K{rowd}" for rowd in matching_row]  # Create a list of ranges
         data = []
         if ranges:  # Check if there are any ranges to request
-            batch_request = sheets.values().batchGet(spreadsheetId=datasheet, ranges=ranges).execute()
+            batch_request = sheets.values().batchGet(spreadsheetId=progresssheet, ranges=ranges).execute()
             for response in batch_request['valueRanges']:
                 data.append(response['values'])
         logging.info(f"data is {data}")
@@ -51,7 +51,7 @@ async def copy(name):
     try:
 
         # Get the spreadsheet
-        spreadsheet = sheets.get(spreadsheetId=datasheet).execute()
+        spreadsheet = sheets.get(spreadsheetId=progresssheet).execute()
 
         # Get the worksheet you want to copy
         template_sheet = [s for s in spreadsheet['sheets'] if s['properties']['title'] == 'template'][0]
@@ -67,10 +67,10 @@ async def copy(name):
                 }
             ]
         }
-        sheets.batchUpdate(spreadsheetId=datasheet, body=request).execute()
+        sheets.batchUpdate(spreadsheetId=progresssheet, body=request).execute()
 
         # Append values to the new sheet
-        sheets.values().update(spreadsheetId=datasheet, range=f"{name}!A1:A1", valueInputOption="USER_ENTERED",
+        sheets.values().update(spreadsheetId=progresssheet, range=f"{name}!A1:A1", valueInputOption="USER_ENTERED",
                                body={'values': [[name]]}).execute()
     except HttpError as error:
         logging.error(error)
@@ -101,8 +101,8 @@ async def getuser(name):
 
 
 async def check_old_entries(bot):
-    result = sheets.values().get(spreadsheetId=datasheet, range="DATA!L:L").execute()
-    result2 = sheets.values().get(spreadsheetId=datasheet, range="DATA!M:M").execute()
+    result = sheets.values().get(spreadsheetId=progresssheet, range="DATA!L:L").execute()
+    result2 = sheets.values().get(spreadsheetId=progresssheet, range="DATA!M:M").execute()
     values = result.get('values', [])
     values2 = result2.get('values', [])
     # Get the current date and time
@@ -121,7 +121,7 @@ async def check_old_entries(bot):
                     if values2[i - 1] and values2[i - 1][0] is not None:
                         pass
                     else:
-                        data = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!F{i}:K{i}").execute()
+                        data = sheets.values().get(spreadsheetId=progresssheet, range=f"DATA!F{i}:K{i}").execute()
                         series = data["values"][0][1]
                         chapter = data["values"][0][2]
                         user = data["values"][0][5]
@@ -130,7 +130,7 @@ async def check_old_entries(bot):
                             role = role_dict_reaction[role]
                         message = await channel.send(
                             f"Hey, {user}! You accepted an assignment on {date_only} for {series} CH {chapter} ({role}). The deadline for this is tomorrow. Will you be able to finish it by then?")
-                        sheets.values().update(spreadsheetId=datasheet, range=f"DATA!M{i}:M{i}",
+                        sheets.values().update(spreadsheetId=progresssheet, range=f"DATA!M{i}:M{i}",
                                                valueInputOption="USER_ENTERED",
                                                body={'values': [[str(message.id)]]}).execute()
                         await message.add_reaction("✅")
@@ -143,7 +143,7 @@ async def check_old_entries(bot):
 
 
 async def storetime(row, time):
-    sheets.values().update(spreadsheetId=datasheet, range=f"DATA!L{row}:L{row}",
+    sheets.values().update(spreadsheetId=progresssheet, range=f"DATA!L{row}:L{row}",
                            valueInputOption="USER_ENTERED", body={'values': [[str(time)]]}).execute()
 
 
@@ -151,31 +151,31 @@ async def getmessageid(id):
     name = None
     # await checkcred()
     try:
-        value = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!F:F").execute()
+        value = sheets.values().get(spreadsheetId=progresssheet, range=f"DATA!F:F").execute()
         for i, row in enumerate(value['values'], start=1):
             if row and f"{row[0]}" == f"{id}":
                 name = i
         if name is not None:
-            data = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!G{name}:K{name}").execute()
+            data = sheets.values().get(spreadsheetId=progresssheet, range=f"DATA!G{name}:K{name}").execute()
             return data["values"][0], name
     except HttpError as error:
         logging.error(error)
 
 
 async def remove_due_date(row):
-    sheets.values().update(spreadsheetId=datasheet, range=f"DATA!M{row}:M{row}",
+    sheets.values().update(spreadsheetId=progresssheet, range=f"DATA!M{row}:M{row}",
                            valueInputOption="USER_ENTERED", body={'values': [[""]]}).execute()
 
 
 async def getmessageid_due_date(id):
     name = None
     try:
-        value = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!M:M").execute()
+        value = sheets.values().get(spreadsheetId=progresssheet, range=f"DATA!M:M").execute()
         for i, row in enumerate(value['values'], start=1):
             if row and f"{row[0]}" == f"{id}":
                 name = i
         if name is not None:
-            data = sheets.values().get(spreadsheetId=datasheet, range=f"DATA!G{name}:L{name}").execute()
+            data = sheets.values().get(spreadsheetId=progresssheet, range=f"DATA!G{name}:L{name}").execute()
             return data["values"][0], name
     except HttpError as error:
         logging.error(error)
@@ -191,7 +191,7 @@ async def write(data, status):
     user = data[4]
 
     try:
-        value = sheets.values().get(spreadsheetId=datasheet, range=f"{sheet_name}!A:A").execute()
+        value = sheets.values().get(spreadsheetId=progresssheet, range=f"{sheet_name}!A:A").execute()
 
         for i, row in enumerate(value['values'], start=1):
             if row and row[0] == chapter:
@@ -206,27 +206,27 @@ async def write(data, status):
             if math.ceil(float(prev_chapter)) == math.floor(float(chapter)) or math.floor(
                     float(prev_chapter)) == math.floor(float(chapter)) or int(prev_chapter) + 1 == int(chapter):
                 chapter_index = len(value['values']) + 1
-                sheets.values().append(spreadsheetId=datasheet, range=f"{sheet_name}!A{chapter_index}:A{chapter_index}",
+                sheets.values().append(spreadsheetId=progresssheet, range=f"{sheet_name}!A{chapter_index}:A{chapter_index}",
                                        insertDataOption="INSERT_ROWS", valueInputOption="USER_ENTERED",
                                        body={'values': [[chapter]]}).execute()
         if chapter_index is not None:
-            value = sheets.values().get(spreadsheetId=datasheet,
+            value = sheets.values().get(spreadsheetId=progresssheet,
                                         range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}").execute()
             if first == "N":
                 if status == "Done":
-                    sheets.values().update(spreadsheetId=datasheet,
+                    sheets.values().update(spreadsheetId=progresssheet,
                                            range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}",
                                            valueInputOption="USER_ENTERED",
                                            body={'values': [[True, ""]]}).execute()
             else:
 
                 if status == "":
-                    sheets.values().update(spreadsheetId=datasheet,
+                    sheets.values().update(spreadsheetId=progresssheet,
                                            range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}",
                                            valueInputOption="USER_ENTERED",
                                            body={'values': [["", status]]}).execute()
                 else:
-                    sheets.values().update(spreadsheetId=datasheet,
+                    sheets.values().update(spreadsheetId=progresssheet,
                                            range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}",
                                            valueInputOption="USER_ENTERED",
                                            body={'values': [[await getuser(user), status]]}).execute()
@@ -236,7 +236,7 @@ async def write(data, status):
 
 async def store(message_id, sheet, ch, user, f, se):
     try:
-        sheets.values().append(spreadsheetId=datasheet, range=f"DATA!F2:K2", insertDataOption="INSERT_ROWS",
+        sheets.values().append(spreadsheetId=progresssheet, range=f"DATA!F2:K2", insertDataOption="INSERT_ROWS",
                                valueInputOption="USER_ENTERED",
                                body={'values': [[str(message_id), sheet, ch, f, se, str(user)]]}).execute()
     except HttpError as error:
@@ -245,7 +245,7 @@ async def store(message_id, sheet, ch, user, f, se):
 
 async def writechannel(channel_id, sheet):
     try:
-        sheets.values().append(spreadsheetId=datasheet, insertDataOption="INSERT_ROWS", range=f"CHANNELS!3:3",
+        sheets.values().append(spreadsheetId=progresssheet, insertDataOption="INSERT_ROWS", range=f"CHANNELS!3:3",
                                valueInputOption="USER_ENTERED", body={'values': [[channel_id, sheet]]}).execute()
     except HttpError as error:
         logging.error(error)
@@ -253,12 +253,12 @@ async def writechannel(channel_id, sheet):
 
 async def updatesheet(channel_id, sheet):
     try:
-        value = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!A:A").execute()
+        value = sheets.values().get(spreadsheetId=progresssheet, range=f"CHANNELS!A:A").execute()
         for i, row in enumerate(value['values'], start=1):
             if row and row[0] == f"{channel_id}":
                 row = i
 
-        sheets.values().update(spreadsheetId=datasheet, range=f"CHANNELS!{row}:{row}", valueInputOption="USER_ENTERED",
+        sheets.values().update(spreadsheetId=progresssheet, range=f"CHANNELS!{row}:{row}", valueInputOption="USER_ENTERED",
                                body={'values': [[channel_id, sheet]]}).execute()
     except HttpError as error:
         logging.error(error)
@@ -266,12 +266,12 @@ async def updatesheet(channel_id, sheet):
 
 async def updatechannel_id(channel_id, sheet):
     try:
-        value = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!B:B").execute()
+        value = sheets.values().get(spreadsheetId=progresssheet, range=f"CHANNELS!B:B").execute()
         for i, row in enumerate(value['values'], start=1):
             if row and row[0] == f"{sheet}":
                 row = i
 
-        sheets.values().update(spreadsheetId=datasheet, range=f"CHANNELS!{row}:{row}", valueInputOption="USER_ENTERED",
+        sheets.values().update(spreadsheetId=progresssheet, range=f"CHANNELS!{row}:{row}", valueInputOption="USER_ENTERED",
                                body={'values': [[channel_id, sheet]]}).execute()
     except HttpError as error:
         logging.error(error)
@@ -280,11 +280,11 @@ async def updatechannel_id(channel_id, sheet):
 async def getsheetname(channel_id):
     try:
         rowd = None
-        value = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!A:A").execute()
+        value = sheets.values().get(spreadsheetId=progresssheet, range=f"CHANNELS!A:A").execute()
         for i, row in enumerate(value['values'], start=1):
             if row and row[0] == channel_id:
                 rowd = i
-        name = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!B{rowd}:B{rowd}").execute()
+        name = sheets.values().get(spreadsheetId=progresssheet, range=f"CHANNELS!B{rowd}:B{rowd}").execute()
         return name["values"][0][0]
     except HttpError as error:
         logging.error(error)
@@ -293,11 +293,11 @@ async def getsheetname(channel_id):
 async def getchannelid(sheet):
     try:
         rowd = None
-        value = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!B:B").execute()
+        value = sheets.values().get(spreadsheetId=progresssheet, range=f"CHANNELS!B:B").execute()
         for i, row in enumerate(value['values'], start=1):
             if row and row[0] == sheet:
                 rowd = i
-        name = sheets.values().get(spreadsheetId=datasheet, range=f"CHANNELS!A{rowd}:A{rowd}").execute()
+        name = sheets.values().get(spreadsheetId=progresssheet, range=f"CHANNELS!A{rowd}:A{rowd}").execute()
         return name["values"][0][0]
     except HttpError as error:
         logging.error(error)
@@ -307,7 +307,7 @@ async def delete_row(row_index):  # delets the row in the sheet "Data" ...
     # await checkcred()
 
     request = sheets.batchUpdate(
-        spreadsheetId=datasheet,
+        spreadsheetId=progresssheet,
         body={
             'requests': [
                 {
