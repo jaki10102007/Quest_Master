@@ -62,6 +62,8 @@ async def on_raw_reaction_add(payload):
                     await sh.write(data, "Done")
                     await sh.delete_row(row_name)  # clear message data
                     await remove_reaction(bot, payload.channel_id, payload.message_id, "🥂", False)
+                    await asyncio.sleep(120)
+                    await delete_message(bot, payload.channel_id, payload.message_id)
                 elif emoji_repr == "<PartialEmoji animated=False name='❌' id=None>":
                     await reactionhelper(data, assignmentlog, "Declined")
                     await delete_message(bot ,payload.channel_id, payload.message_id)
