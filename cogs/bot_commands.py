@@ -88,6 +88,9 @@ class BotCommands(commands.Cog):
 
             message = await target_channel.send(f"{series}| CH {chapter} | {role} | {who}")
             data = [await sh.getsheetname(series), chapter, first, second, who]
+            if data[0] is None:
+                await interaction.followup.send(f"Oops something went wrong! \nAre you sure that the channel is Inside the Databank?", ephemeral=True)
+            # If the sheet is not found, the message will be deleted and the user will be notified
             await sh.store(message.id, data[0], chapter, who, first, second)
             await sh.write(data, "Assigned")
             await interaction.followup.send(content="Assigned")
