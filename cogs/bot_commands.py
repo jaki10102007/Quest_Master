@@ -147,7 +147,7 @@ class BotCommands(commands.Cog):
         channels_positions = {channels[i].id: i for i in range(len(channels))}
         channels_positions[channel.id] = new_position
         id = channel.id
-        await sh.writechannel(f"<@{channel.id}>", sheet)
+        await sh.writechannel(f"<#{channel.id}>", sheet)
 
     @app_commands.command(name="updatechannelname")
     @app_commands.describe(channel="# of the Channel", new_name="The new name for the sheet")
