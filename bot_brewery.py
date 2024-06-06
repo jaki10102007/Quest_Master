@@ -75,7 +75,7 @@ async def on_raw_reaction_add(payload):
                         await delete_message(bot, payload.channel_id, payload.message_id)
                         await sh.write(data, "")
                         await sh.delete_row(row_name)
-                        await assignmentlog.send(f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | **Deleted** | {data[4]}")
+                        #await assignmentlog.send(f"{await sh.getchannelid(data[0])} | CH {data[1]} | {role} | **Deleted** | {data[4]}")
         elif channel_id == CHECKUP_CHANNEL: # every reaction in the Hydrometer channel
             data, row_name = await sh.getmessageid_due_date(payload.message_id)
             if f"<@{payload.user_id}>" == data[4]:
