@@ -130,6 +130,7 @@ async def on_member_join(member):
 # Define tasks - looping #
 @tasks.loop(minutes=1)
 async def check_old_entries():
+    await bot.wait_until_ready()  # Wait until the bot is ready
     await sh.check_old_entries(bot)
 
 
