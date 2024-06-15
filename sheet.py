@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO, filename='app.log', filemode='w', format
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 load_dotenv()
-staffsheet = os.getenv("STAFF") #
+staffsheet = os.getenv("STAFF") # Where staff info is tracked
 progresssheet = os.getenv("DATA") # Progess tracker
 ID= os.getenv("ID") # Used for deleting rows
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
@@ -55,14 +55,6 @@ async def retriev_assignments(user):
         return data
     except HttpError as error:
         logging.error(error)
-async def channelid(channel, name):
-    try:
-        sheets.values().append(spreadsheetId=staffsheet, insertDataOption="INSERT_ROWS", range=f"3:3",
-                               valueInputOption="USER_ENTERED", body={'values': [
-                [name, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", id]]}).execute()
-    except HttpError as error:
-        logging.error(f"Failed to append values in channelid function: {error}")
-
 
 async def copy(name):
     '''This will copy the template sheet and append the name to the new sheet'''
@@ -95,7 +87,16 @@ async def copy(name):
 
 
 async def findid(name, ids):
+    """
+        This function adds a Discord user's name and ID to the staff sheet in Google Sheets.
 
+        Args:
+            name (str): The Discord username.
+            ids (str): The Discord user's ID.
+
+        Raises:
+            HttpError: If an error occurs while trying to append the values to the Google Sheets spreadsheet. The error is logged using the `logging` module.
+    """
     try:
         sheets.values().append(spreadsheetId=staffsheet, insertDataOption="INSERT_ROWS", range=f"3:3",
                                valueInputOption="USER_ENTERED", body={'values': [
@@ -166,6 +167,18 @@ async def storetime(row, time):
 
 
 async def getmessageid(id):
+    """
+        This asynchronous function retrieves Data by using a message ID from a Google Sheets spreadsheet.
+
+        Args:
+            id (str): The ID of the message to retrieve.
+
+        Returns:
+            tuple: A tuple containing the fetched values and the row index if the ID is found, None otherwise.
+
+        Raises:
+            HttpError: If an error occurs while trying to fetch the values from the Google Sheets spreadsheet. The error is logged using the `logging` module.
+    """
     name = None
     # await checkcred()
     try:
@@ -193,7 +206,7 @@ async def getmessageid_due_date(id):
             if row and f"{row[0]}" == f"{id}":
                 name = i
         if name is not None:
-            data = sheets.values().get(spreadsheetId=progresssheet, range=f"DATA!G{name}:L{name}").execute()
+            data = sheets.values().get(spreadsheetId=progresssheet, range=f"DATA!F{name}:L{name}").execute()
             return data["values"][0], name
     except HttpError as error:
         logging.error(error)
@@ -352,4 +365,4 @@ async def get_sheet_id_by_name(spreadsheet_id, sheet_name):
 
 
 #async def main():
-#    await get_sheet_id_by_name(datasheet, "DATA")
+#    await get_sheet_id_by_name(progresssheet, "DATA")
