@@ -1,7 +1,6 @@
 from discord.ext import commands
 from logger import setup_logger
 import sheet as sh
-from bot_brewery import remove_reaction
 
 logger = setup_logger(__name__)
 
