@@ -41,11 +41,10 @@ async def retriev_assignments(user):
     try:
         matching_row = []
         value = sheets.values().get(spreadsheetId=progresssheet, range=f"DATA!K:K").execute()
-        print(value)
         for i, row in enumerate(value['values'], start=1):
             if row and f"{row[0]}" == f"<@{user}>":
                 matching_row.append(i)
-        ranges = [f"DATA!F{rowd}:K{rowd}" for rowd in matching_row]  # Create a list of ranges
+        ranges = [f"DATA!F{rowd}:L{rowd}" for rowd in matching_row]  # Create a list of ranges
         data = []
         if ranges:  # Check if there are any ranges to request
             batch_request = sheets.values().batchGet(spreadsheetId=progresssheet, ranges=ranges).execute()
