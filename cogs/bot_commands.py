@@ -6,13 +6,78 @@ import sheet as sh
 from requests import get
 from logger import setup_logger
 from config import ASSIGNMENT_CHANNEL, ONESHOT_CHANNEL, role_dict
+from datetime import datetime, timedelta
+from config import role_dict_reaction
 
 # Create a logger for the cog
 logger = setup_logger(__name__)
-
+date_format = "%Y-%m-%d"
 
 # note: Remember that when you are inside a cog, you should use self.bot instead of just bot to refer to the bot instance. Moreover, slash commands (@app_commands.command) have been placed in cogs since discord.py v2.x, which means you should also convert your @bot.tree.command to @app_commands.command and use them inside the cog class.
+class Dropdown(discord.ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(label='Assigned', value='assigned'),
+            discord.SelectOption(label='Accepted', value='accepted'),
+        ]
+        super().__init__(placeholder='Select an Option', min_values=1, max_values=1, options=options)
 
+    async def callback(self, interaction: discord.Interaction):
+        if self.values[0] == 'accepted':
+            data = await sh.retriev_assignments(interaction.user.id)
+            filtered_data = [item for item in data if len(item[0]) != 6]
+            print(filtered_data)
+            filtered_data2 = "\n".join([item[0][1] for item in filtered_data])
+            # print(filtered_data2)
+            embed = discord.Embed(title="Accepted",
+                                  description="List of Your Accepted  Assignments",
+                                  colour=0x00b0f4)
+            embed.add_field(name="Series",
+                            value="\n".join([item[0][1] for item in filtered_data]),
+                            inline=True)
+            updated_dates = [(datetime.strptime(item[0][6], date_format) + timedelta(days=4)).strftime(date_format) for item
+                             in filtered_data]
+            embed.add_field(name="Due Date",
+                            value="\n".join(updated_dates),
+                            inline=True)
+            combined_values = [
+                f"https://discord.com/channels/1218035430373462016/1218705159614631946/{item[0][0]}" for item
+                in filtered_data]
+            combined_string = "\n".join(combined_values)
+            embed.add_field(name="Link",
+                            value=combined_string,
+                            inline=True)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+        if self.values[0] == 'assigned':
+            data = await sh.retriev_assignments(interaction.user.id)
+            filtered_data = [item for item in data if len(item[0]) == 6]
+            print(filtered_data)
+            embed = discord.Embed(title="Assigned",
+                                  description="List of Your Assignments which are not accepted",
+                                  colour=0x00b0f4)
+            embed.add_field(name="Series",
+                            value="\n".join([item[0][1] for item in filtered_data]),
+                            inline=True)
+            corresponding_values = [role_dict_reaction[item[0][3]] for item in filtered_data]
+            embed.add_field(name="Role",
+                            value="\n".join(corresponding_values),
+                            inline=True)
+            combined_values = [
+                f"https://discord.com/channels/1218035430373462016/1218705159614631946/{item[0][0]}" for item
+                in filtered_data]
+            print(combined_values)
+            print(filtered_data[0][0])
+            combined_string = "\n".join(combined_values)
+            embed.add_field(name="Link",
+                            value=combined_string,
+                            inline=True)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+class DropdownView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.add_item(Dropdown())
 class BotCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -23,23 +88,12 @@ class BotCommands(commands.Cog):
     async def foo(self, ctx, arg):
         await ctx.send(arg)
 
+    @app_commands.command(name="dropdown")
+    @app_commands.describe("Gives you a drop down Menu to select between Accepted and Assigned list")
+    async def dropdown(self, interaction: discord.Interaction):
+        view = DropdownView()
+        await interaction.response.send_message(view=view , ephemeral=True)
     # slash commands go here using @app_commands decorator
-    @app_commands.command(name="checkassign")
-    @app_commands.describe(accapted="only show accapted assignments")
-    async def checkassign(self, interaction: discord.Interaction, accapted: bool):
-        if accapted:
-            assignment = await sh.retriev_assignments(interaction.user.id)
-            logger.info(assignment)
-            #await interaction.response.send_message("Done")
-            #await interaction.response.send_message(str(assignment))
-            embed = discord.Embed(title="Title", description="Description", color=discord.Color.blue())
-            embed.add_field(name="Field1", value="value1", inline=True)
-            embed.add_field(name="Field2", value="value2", inline=True)
-            embed.set_footer(text="Footer text")
-            await interaction.response.send_message(embed=embed)
-            #embed.add_field(name='Title', value="\n".join([place, name, level]), inline=True)
-        else:
-            await interaction.response.send_message("Not Done")
 
     @app_commands.command(name="findid")
     @app_commands.describe(user="User")
@@ -166,7 +220,7 @@ class BotCommands(commands.Cog):
     async def done(self, interaction: discord.Interaction, series: str, chapter: str, role: str):
         first = None
         second = None
-        target_channel_id = int("1218705159614631946")  # change to actual channel 
+        target_channel_id = int("1218705159614631946")  # change to actual channel
         target_channel = self.bot.get_channel(target_channel_id)
         user = interaction.user.id
 
