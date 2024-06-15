@@ -88,7 +88,7 @@ class BotCommands(commands.Cog):
     async def foo(self, ctx, arg):
         await ctx.send(arg)
 
-    @app_commands.command(name="dropdown")
+    @app_commands.command(name="Assignments")
     @app_commands.describe("Gives you a drop down Menu to select between Accepted and Assigned list")
     async def dropdown(self, interaction: discord.Interaction):
         view = DropdownView()
