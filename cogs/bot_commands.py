@@ -87,7 +87,7 @@ class BotCommands(commands.Cog):
     async def foo(self, ctx, arg):
         await ctx.send(arg)
 
-    @app_commands.command(name="Assignments")
+    @app_commands.command(name="assignments")
     async def dropdown(self, interaction: discord.Interaction):
         view = DropdownView()
         await interaction.response.send_message(view=view , ephemeral=True)
