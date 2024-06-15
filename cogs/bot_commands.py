@@ -88,7 +88,6 @@ class BotCommands(commands.Cog):
         await ctx.send(arg)
 
     @app_commands.command(name="Assignments")
-    @app_commands.describe("Gives you a drop down Menu to select between Accepted and Assigned list")
     async def dropdown(self, interaction: discord.Interaction):
         view = DropdownView()
         await interaction.response.send_message(view=view , ephemeral=True)
