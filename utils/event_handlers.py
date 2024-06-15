@@ -1,7 +1,7 @@
 from discord.ext import commands
-import sheet as sh
 from logger import setup_logger
-from bot_brewery import check_old_entries
+import sheet as sh
+from bot_brewery import remove_reaction
 
 logger = setup_logger(__name__)
 
@@ -9,8 +9,13 @@ setup_event_handlers = {}
 
 
 async def bot_ready(bot):
+    """
+        Logs  bot's connection to Discord and syncs commands. Logs any sync errors.
+
+        Args:
+            bot (Bot): The bot instance that has connected to Discord.
+    """
     logger.info(f'{bot.user} has connected to Discord!')
-    #check_old_entries.start()
     try:
         synced = await bot.tree.sync()
         logger.info(f"Synced {len(synced)} command(s)")
