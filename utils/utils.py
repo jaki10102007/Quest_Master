@@ -121,7 +121,6 @@ async def assignment_reaction(bot, payload, assignmentlog):
             guild = bot.get_guild(payload.guild_id)
             required_role = discord.utils.get(guild.roles, name="Tavern Keeper")
             member = guild.get_member(payload.user_id)
-            logger.info(member.roles)
             if required_role in member.roles:
                 await delete_message(bot, payload.channel_id, payload.message_id)
                 await sh.write(data, "")
