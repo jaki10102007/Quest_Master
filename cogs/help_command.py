@@ -1,5 +1,6 @@
 from discord.ext import commands
 
+
 class HelpCommand(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -17,6 +18,7 @@ class HelpCommand(commands.Cog):
         (Add more as needed)
         """
         await ctx.send(help_text)
+
 
 async def setup(bot):
     await bot.add_cog(HelpCommand(bot))
