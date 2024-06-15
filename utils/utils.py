@@ -1,8 +1,10 @@
+import logging
 import discord
 import sheet as sh
 from datetime import datetime
-from config import role_dict_reaction
+from config import role_dict_reaction , ASSIGNMENT_CHANNEL , CHECKUP_CHANNEL , ONESHOT_CHANNEL
 import asyncio
+
 
 
 # Helper functions #
@@ -141,23 +143,27 @@ async def checkup_reaction(bot, payload, assignmentlog):
         """
     emoji_repr = repr(payload.emoji)
     data, row_name = await sh.getmessageid_due_date(payload.message_id)
-    if f"<@{payload.user_id}>" == data[4]:
+    if f"<@{payload.user_id}>" == data[5]:
         if emoji_repr == "<PartialEmoji animated=False name='✅' id=None>":
             await delete_message(bot, payload.channel_id, payload.message_id, delete_after=60)
-            await remove_reaction(bot, payload.channel_id, payload.message_id, "❌", False)
-            await remove_reaction(bot, payload.channel_id, payload.message_id, "<:no:1225574648088105040>", False)
         if emoji_repr == "<PartialEmoji animated=False name='no' id=1225574648088105040>":
             row = row_name
             user = bot.get_user(payload.user_id)
-            role = data[2]
-            original_date = data[5]
+            role = data[3]
+            original_date = data[6]
             if role in role_dict_reaction:
                 role = role_dict_reaction[role]
-            date, msg = await select_date(bot, user, data[0], data[1], role, f"<@{payload.user_id}>")
+            date, msg = await select_date(bot, user, data[1], data[2], role, f"<@{payload.user_id}>")
             due_date = date - timedelta(days=4)
             await sh.storetime(row, due_date)
             await sh.remove_due_date(row)
             await delete_message(bot, payload.channel_id, payload.message_id)
             await assignmentlog.send(
-                f"<@{payload.user_id}> has **extended** the due date for {data[0]} CH {data[1]} (Role: {role}) from {original_date} to **{date}**.\n"
+                f"<@{payload.user_id}> has **extended** the due date for {data[1]} CH {data[2]} (Role: {role}) from {original_date} to **{date}**.\n"
                 f"Reason: {msg.content}")
+        elif emoji_repr == "<PartialEmoji animated=False name='❌' id=None>":
+            await delete_message(bot, payload.channel_id, payload.message_id)
+            await delete_message(bot, ASSIGNMENT_CHANNEL, f"{data[0]}")
+            await sh.delete_row(row_name)
+            data.pop(0)
+            await reactionhelper(data, assignmentlog, "Declined")
