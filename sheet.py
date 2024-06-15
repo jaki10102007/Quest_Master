@@ -21,6 +21,23 @@ service = build("sheets", "v4", credentials=credential)
 sheets = service.spreadsheets()
 
 async def retriev_assignments(user):
+    """
+        This function retrieves assignments for a specific user from a Google Sheets spreadsheet.
+
+        It first fetches all values in column K of the DATA sheet, where user assignments are stored in the format "<@user_id>".
+        It then iterates over these values, and for each row where the value matches the provided user ID, it appends the row index to a list.
+        For each row index in this list, it creates a range string representing columns F to K of that row in the DATA sheet.
+        If there are any ranges to request, it performs a batchGet request to fetch these ranges from the spreadsheet.
+        The values from each fetched range are then appended to a list, which is returned.
+
+        If an HttpError occurs during any of these operations, it is caught and logged, and the function returns None.
+
+        Args:
+            user (str): The ID of the user to retrieve assignments for.
+
+        Returns:
+            list: A list of lists, where each inner list represents the values in columns F to K of a row in the DATA sheet where the user ID in column K matches the provided user ID. If an error occurs, returns None.
+        """
     try:
         matching_row = []
         value = sheets.values().get(spreadsheetId=progresssheet, range=f"DATA!K:K").execute()
@@ -48,6 +65,7 @@ async def channelid(channel, name):
 
 
 async def copy(name):
+    '''This will copy the template sheet and append the name to the new sheet'''
     try:
 
         # Get the spreadsheet
