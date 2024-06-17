@@ -94,6 +94,14 @@ class BotCommands(commands.Cog):
         """
         with open('app.log', 'rb') as fp:
             await interaction.response.send_message(file=discord.File(fp, 'app.log'))
+
+    @app_commands.command(name="botlogs")
+    async def upload_log(self, interaction: discord.Interaction):
+        """
+        Uploads the bot.log file to the Discord channel where the command was invoked.
+        """
+        with open('bot.log', 'rb') as fp:
+            await interaction.response.send_message(file=discord.File(fp, 'bot.log'))
     @app_commands.command(name="assignments")
     async def dropdown(self, interaction: discord.Interaction):
         view = DropdownView()
