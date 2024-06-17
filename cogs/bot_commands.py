@@ -87,6 +87,13 @@ class BotCommands(commands.Cog):
     async def foo(self, ctx, arg):
         await ctx.send(arg)
 
+    @app_commands.command(name="logs")
+    async def upload_log(self, interaction: discord.Interaction):
+        """
+        Uploads the app.log file to the Discord channel where the command was invoked.
+        """
+        with open('app.log', 'rb') as fp:
+            await interaction.response.send_message(file=discord.File(fp, 'app.log'))
     @app_commands.command(name="assignments")
     async def dropdown(self, interaction: discord.Interaction):
         view = DropdownView()
@@ -237,11 +244,6 @@ class BotCommands(commands.Cog):
             await sh.write(list, "Done")
             # await interaction.response.send_message("Send", ephemeral=True)
 
-    @app_commands.command(name="logs")
-    @app_commands.describe()
-    async def logs(self, interaction: discord.Interaction):
-        with open("example.log", "r") as file:
-            await interaction.response.send_message(file.read(), ephemeral=True)
 
     @app_commands.command(name="ip")
     @app_commands.describe()
