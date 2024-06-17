@@ -96,7 +96,7 @@ class BotCommands(commands.Cog):
             await interaction.response.send_message(file=discord.File(fp, 'app.log'))
 
     @app_commands.command(name="botlogs")
-    async def upload_log(self, interaction: discord.Interaction):
+    async def upload_botlog(self, interaction: discord.Interaction):
         """
         Uploads the bot.log file to the Discord channel where the command was invoked.
         """
