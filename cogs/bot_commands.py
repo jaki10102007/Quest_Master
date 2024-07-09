@@ -153,7 +153,7 @@ class BotCommands(commands.Cog):
             ## One SHot ##
         if required_role not in member.roles:
 
-            message = await target_channel.send(f"{series}| CH {chapter} | {role} | {who}")
+            message = await target_channel.send(f"{await sh.getsheetname(series)} | CH {chapter} | {role} | {who}")
             data = [await sh.getsheetname(series), chapter, first, second, who]
             if data[0] is None:
                 await interaction.followup.send(f"Oops something went wrong! \nAre you sure that the channel is Inside the Databank?", ephemeral=True)
