@@ -113,6 +113,7 @@ async def getuser(name):
                 name = i
 
         creditname = sheets.values().get(spreadsheetId=staffsheet, range=f"C{name}:C{name}").execute()
+        logging.info(creditname["values"][0])
         return creditname["values"][0][0]
     except HttpError as error:
         logging.error(error)

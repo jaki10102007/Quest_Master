@@ -184,7 +184,7 @@ class BotCommands(commands.Cog):
         else:
             for x in range(start_chapter, end_chapter + 1):
                 chapter = str(x)
-                message = await target_channel.send(f"{series}| CH {chapter} | {role} | {who}")
+                message = await target_channel.send(f"{await sh.getsheetname(series)}| CH {chapter} | {role} | {who}")
                 data = [await sh.getsheetname(series), chapter, first, second, who]
                 await sh.store(message.id, data[0], chapter, who, first, second)
                 await sh.write(data, "Assigned")
