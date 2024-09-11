@@ -141,6 +141,25 @@ class assignment(commands.Cog):
     async def dropdown(self, interaction: discord.Interaction):
         view = DropdownView()
         await interaction.response.send_message(view=view, ephemeral=True)
+
+    @app_commands.command(name="userassignments")
+    @app_commands.describe(user="User ID")
+    async def userassignments(self, interaction: discord.Interaction, user: str):
+        data = await sh.retriev_assignments((user[2:-1]))
+        embed = discord.Embed(title=f"Assignments for User",
+                              description="List of all Assignments",
+                              colour=0x00b0f4)
+        embed.add_field(name="Series",
+                        value="\n".join([item[0][1] for item in data]),
+                        inline=True)
+        embed.add_field(name="Chapter",
+                        value="\n".join([item[0][2] for item in data]),
+                        inline=True)
+        corresponding_values = [role_dict_reaction[item[0][3]] for item in data]
+        embed.add_field(name="Role",
+                        value="\n".join(corresponding_values),
+                        inline=True)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
     # slash commands go here using @app_commands decorator
 
 async def setup(bot):
