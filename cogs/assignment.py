@@ -17,6 +17,7 @@ class Dropdown(discord.ui.Select):
         super().__init__(placeholder='Select an Option', min_values=1, max_values=1, options=options)
 
     async def callback(self, interaction: discord.Interaction):
+        date_format = "%Y-%m-%d"
         if self.values[0] == 'accepted':
             data = await sh.retriev_assignments(interaction.user.id)
             filtered_data = [item for item in data if len(item[0]) != 6]
