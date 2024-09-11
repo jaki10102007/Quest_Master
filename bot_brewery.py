@@ -64,8 +64,8 @@ async def check_old_entries():
 async def main():
     try:
         await bot.load_extension('cogs.bot_commands')  # Load your commands extension
-        await bot.load_extension('cogs.help_command')  # Load your help command extension
-
+        await bot.load_extension('cogs.help_command')  # Load your help command extension        await bot.load_extension('cogs.dev_utilities')  # Load your dev utilities extension
+        await bot.load_extension('cogs.assignment')  # Load your assignment extension
         check_old_entries.start()  # Start the looping task
         await bot.start(TOKEN)  # Start the bot
 
