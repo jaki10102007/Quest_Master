@@ -149,9 +149,12 @@ class assignment(commands.Cog):
         embed = discord.Embed(title=f"Assignments for User",
                               description="List of all Assignments",
                               colour=0x00b0f4)
-        embed.add_field(name="Series",
-                        value="\n".join([item[0][1] for item in data]),
-                        inline=True)
+        combined_values = [
+            f"[{item[0][1]}](https://discord.com/channels/1218035430373462016/1218705159614631946/{item[0][0]})" for
+            item
+            in data]
+        series_values = "\n".join(combined_values)
+        embed.add_field(name="Series", value=series_values, inline=True)
         embed.add_field(name="Chapter",
                         value="\n".join([item[0][2] for item in data]),
                         inline=True)
