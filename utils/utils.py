@@ -104,7 +104,7 @@ async def assignment_reaction(bot, payload, assignmentlog):
                 role = role_dict_reaction[role]
             await assignmentlog.send(
                 f"{data[0]} | CH {data[1]} | {role} | **Done** | {await sh.getuser(data[4])}")
-            news = bot.get_channel(1283764106201006122)
+            news = bot.get_channel(1231652590165426236)
             await news.send(
                 f"{data[0]} | CH {data[1]} | {role} | **Done**")
             # if role == "UPD":
