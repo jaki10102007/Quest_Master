@@ -309,6 +309,18 @@ async def updatechannel_id(channel_id, sheet):
 
 
 async def getsheetname(channel_id):
+    """
+        Retrieves the corresponding series/sheet name for a given Discord channel ID.
+
+        This function searches through a predefined list or mapping of Discord channel IDs to series/sheet names.
+        If a match is found, the corresponding series/sheet name is returned.
+
+        Args:
+            channel_id (str): The Discord channel ID for which to find the corresponding series/sheet name.
+
+        Returns:
+            str: The series/sheet name corresponding to the given Discord channel ID, or None if no match is found.
+        """
     try:
         rowd = None
         value = sheets.values().get(spreadsheetId=progresssheet, range=f"CHANNELS!A:A").execute()
@@ -322,6 +334,18 @@ async def getsheetname(channel_id):
 
 
 async def getchannelid(sheet):
+    """
+        Retrieves the corresponding Discord channel ID for a given series/sheet name.
+
+        This function searches through a predefined list or mapping of series/sheet names to Discord channel IDs.
+        If a match is found, the corresponding channel ID is returned.
+
+        Args:
+            sheet_name (str): The name of the series/sheet for which to find the corresponding Discord channel ID.
+
+        Returns:
+            str: The Discord channel ID corresponding to the given series/sheet name, or None if no match is found.
+        """
     try:
         rowd = None
         value = sheets.values().get(spreadsheetId=progresssheet, range=f"CHANNELS!B:B").execute()
