@@ -4,7 +4,7 @@ import sheet as sh
 from datetime import datetime
 from config import role_dict_reaction , ASSIGNMENT_CHANNEL , CHECKUP_CHANNEL , ONESHOT_CHANNEL
 import asyncio
-
+import cogs.assignment
 
 
 # Helper functions #
@@ -52,7 +52,7 @@ async def reactionhelper(data, assignmentlog, status):
         role = role_dict_reaction[role]
     await sh.write(data, status)
     await assignmentlog.send(
-        f"{data[0]} | CH {data[1]} | {role} | sheet updated to status: **{status}** by: {await sh.getuser(data[4])}")
+        f"{data[0]} | CH {data[1]} | {role} | sheet updated to status: **{status}** by: {await sh.getcreaditname(data[4])}")
 
 
 async def oneshot_reaction(bot, payload, assignmentlog):
@@ -103,7 +103,7 @@ async def assignment_reaction(bot, payload, assignmentlog):
             if role in role_dict_reaction:
                 role = role_dict_reaction[role]
             await assignmentlog.send(
-                f"{data[0]} | CH {data[1]} | {role} | **Done** | {await sh.getuser(data[4])}")
+                f"{data[0]} | CH {data[1]} | {role} | **Done** | {await sh.getcreaditname(data[4])}")
             news = bot.get_channel(1231652590165426236)
             await news.send(
                 f"{data[0]} | CH {data[1]} | {role} | **Done**")
