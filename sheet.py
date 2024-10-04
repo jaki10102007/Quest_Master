@@ -7,18 +7,21 @@ from dotenv import load_dotenv
 import math
 from google.oauth2 import service_account
 from config import role_dict_reaction
-logging.basicConfig(level=logging.INFO, filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+
+logging.basicConfig(level=logging.INFO, filename='app.log', filemode='w',
+                    format='%(name)s - %(levelname)s - %(message)s')
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 load_dotenv()
-staffsheet = os.getenv("STAFF") # Where staff info is tracked
-progresssheet = os.getenv("DATA") # Progess tracker
-ID= os.getenv("ID") # Used for deleting rows
+staffsheet = os.getenv("STAFF")  # Where staff info is tracked
+progresssheet = os.getenv("DATA")  # Progess tracker
+ID = os.getenv("ID")  # Used for deleting rows
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
 credential = service_account.Credentials.from_service_account_file(
     "service_account.json", scopes=SCOPES)
 service = build("sheets", "v4", credentials=credential)
 sheets = service.spreadsheets()
+
 
 async def retriev_assignments(user):
     """
@@ -54,6 +57,7 @@ async def retriev_assignments(user):
         return data
     except HttpError as error:
         logging.error(error)
+
 
 async def copy(name):
     '''This will copy the template sheet and append the name to the new sheet'''
@@ -105,14 +109,53 @@ async def findid(name, ids):
         logging.error(error)
 
 
-async def getuser(name):
-    try:
-        value = sheets.values().get(spreadsheetId=staffsheet, range=f"V:V").execute()
-        for i, row in enumerate(value['values'], start=1):
-            if row and f"<@{row[0]}>" == f"{name}":
-                name = i
+async def getuserid(credit_name):
+    """
+    Retrieves the corresponding Discord user ID for a given credit name.
 
-        creditname = sheets.values().get(spreadsheetId=staffsheet, range=f"C{name}:C{name}").execute()
+    This function searches through a predefined list or mapping of credit names to Discord user IDs.
+    If a match is found, the corresponding user ID is returned.
+
+    Args:
+        credit_name (str): The credit name for which to find the corresponding Discord user ID.
+
+    Returns:
+        str: The Discord user ID corresponding to the given credit name, or None if no match is found.
+    """
+    try:
+        value = sheets.values().get(spreadsheetId=staffsheet, range=f"C:C").execute()
+        print(value)
+        for i, row in enumerate(value['values'], start=1):
+            if row and f"{row[0]}" == f"{credit_name}":
+                credit_name = i
+        userid = sheets.values().get(spreadsheetId=staffsheet, range=f"V{credit_name}:V{credit_name}").execute()
+        print(userid)
+        logging.info(userid["values"][0])
+        return userid["values"][0][0]
+    except HttpError as error:
+        logging.error(error)
+
+
+async def getcreaditname(user_id):
+    """
+    Retrieves the corresponding credit name for a given Discord user ID.
+
+    This function searches through a predefined list or mapping of Discord user IDs to credit names.
+    If a match is found, the corresponding credit name is returned.
+
+    Args:
+        user_id (str): The Discord user ID for which to find the corresponding credit name.
+
+    Returns:
+        str: The credit name corresponding to the given Discord user ID, or None if no match is found.
+    """
+    try:
+        value = sheets.values().get(spreadsheetId=staffsheet, range=f"W:W").execute()
+        for i, row in enumerate(value['values'], start=1):
+            if row and f"<@{row[0]}>" == f"{user_id}":
+                user_id = i
+
+        creditname = sheets.values().get(spreadsheetId=staffsheet, range=f"C{user_id}:C{user_id}").execute()
         logging.info(creditname["values"][0])
         return creditname["values"][0][0]
     except HttpError as error:
@@ -237,7 +280,8 @@ async def write(data, status):
             if math.ceil(float(prev_chapter)) == math.floor(float(chapter)) or math.floor(
                     float(prev_chapter)) == math.floor(float(chapter)) or int(prev_chapter) + 1 == int(chapter):
                 chapter_index = len(value['values']) + 1
-                sheets.values().append(spreadsheetId=progresssheet, range=f"{sheet_name}!A{chapter_index}:A{chapter_index}",
+                sheets.values().append(spreadsheetId=progresssheet,
+                                       range=f"{sheet_name}!A{chapter_index}:A{chapter_index}",
                                        insertDataOption="INSERT_ROWS", valueInputOption="USER_ENTERED",
                                        body={'values': [[chapter]]}).execute()
         if chapter_index is not None:
@@ -260,7 +304,7 @@ async def write(data, status):
                     sheets.values().update(spreadsheetId=progresssheet,
                                            range=f"{sheet_name}!{first}{chapter_index}:{second}{chapter_index}",
                                            valueInputOption="USER_ENTERED",
-                                           body={'values': [[await getuser(user), status]]}).execute()
+                                           body={'values': [[await getcreaditname(user), status]]}).execute()
     except HttpError as error:
         logging.error(f"An error occurred: {error}")
 
@@ -289,7 +333,8 @@ async def updatesheet(channel_id, sheet):
             if row and row[0] == f"{channel_id}":
                 row = i
 
-        sheets.values().update(spreadsheetId=progresssheet, range=f"CHANNELS!{row}:{row}", valueInputOption="USER_ENTERED",
+        sheets.values().update(spreadsheetId=progresssheet, range=f"CHANNELS!{row}:{row}",
+                               valueInputOption="USER_ENTERED",
                                body={'values': [[channel_id, sheet]]}).execute()
     except HttpError as error:
         logging.error(error)
@@ -302,7 +347,8 @@ async def updatechannel_id(channel_id, sheet):
             if row and row[0] == f"{sheet}":
                 row = i
 
-        sheets.values().update(spreadsheetId=progresssheet, range=f"CHANNELS!{row}:{row}", valueInputOption="USER_ENTERED",
+        sheets.values().update(spreadsheetId=progresssheet, range=f"CHANNELS!{row}:{row}",
+                               valueInputOption="USER_ENTERED",
                                body={'values': [[channel_id, sheet]]}).execute()
     except HttpError as error:
         logging.error(error)
@@ -381,12 +427,18 @@ async def delete_row(row_index):  # delets the row in the sheet "Data" ...
     response = request.execute()
 
 
+async def user_prev_assignment(series, prevrow):
+    user = sheets.values().get(spreadsheetId=progresssheet, range=f"{series}!L:L").execute()
+    user = await getuserid(user["values"][0])
+    user = f"<@{user}>"
+    print(user)
+    return user
+
+
 async def get_sheet_id_by_name(spreadsheet_id, sheet_name):
     spreadsheet = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
     for sheet in spreadsheet['sheets']:
         if sheet['properties']['title'] == sheet_name:
             print(sheet['properties']['sheetId'])
-
-
-#async def main():
+# async def main():
 #    await get_sheet_id_by_name(progresssheet, "DATA")
