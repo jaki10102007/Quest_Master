@@ -50,7 +50,7 @@ async def on_raw_reaction_add(payload):
 
 @bot.event
 async def on_member_join(member):
-    await sh.findid(member.name, str(member.id))
+    await sh.addid(member.name, str(member.id))
 
 
 # Define tasks - looping #

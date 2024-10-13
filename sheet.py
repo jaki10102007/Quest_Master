@@ -60,7 +60,19 @@ async def retriev_assignments(user):
 
 
 async def copy(name):
-    '''This will copy the template sheet and append the name to the new sheet'''
+    """
+    Asynchronously duplicates a template sheet in a Google Sheets spreadsheet and appends a new name to the duplicated sheet.
+
+    This function retrieves the spreadsheet using the sheets.get() method, finds the template sheet to be duplicated,
+    creates a request to duplicate the sheet, sends the request to duplicate the sheet using the sheets.batchUpdate() method,
+    and updates cell A1 of the new sheet with the new sheet's name using the sheets.values().update() method.
+
+    Args:
+        name (str): The name to be given to the duplicated sheet.
+
+    Raises:
+        HttpError: If an error occurs while trying to duplicate the sheet or update the new sheet's name. The error is logged using the logging module.
+    """
     try:
 
         # Get the spreadsheet
@@ -89,7 +101,7 @@ async def copy(name):
         logging.error(error)
 
 
-async def findid(name, ids):
+async def addid(name, ids):
     """
         This function adds a Discord user's name and ID to the staff sheet in Google Sheets.
 
@@ -211,7 +223,7 @@ async def storetime(row, time):
 
 async def getmessageid(id):
     """
-        This asynchronous function retrieves Data by using a message ID from a Google Sheets spreadsheet.
+        This asynchronous function retrieves Assignment data by using a message ID from a Google Sheets spreadsheet.
 
         Args:
             id (str): The ID of the message to retrieve.

@@ -107,6 +107,13 @@ async def assignment_reaction(bot, payload, assignmentlog):
             news = bot.get_channel(1231652590165426236)
             await news.send(
                 f"{data[0]} | CH {data[1]} | {role} | **Done**")
+            last_message = None
+            async for message in news.history(limit=1):
+                last_message = message
+
+            # Publish the message
+            if last_message is not None:
+                await last_message.publish()
             # if role == "UPD":
             #    await sh.write(data, "")
             # else:

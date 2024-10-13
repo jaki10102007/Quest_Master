@@ -24,7 +24,7 @@ class BotCommands(commands.Cog):
     @app_commands.describe(user="User")
     async def findid(self, interaction: discord.Interaction, user: discord.User):
         await interaction.response.send_message("Done")
-        await sh.findid(user.name, str(user.id))
+        await sh.addid(user.name, str(user.id))
 
     @app_commands.command(name="oneshot")
     @app_commands.describe(series="# of the series")
