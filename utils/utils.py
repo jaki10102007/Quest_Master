@@ -105,23 +105,13 @@ async def assignment_reaction(bot, payload, assignmentlog):
             await assignmentlog.send(
                 f"{data[0]} | CH {data[1]} | {role} | **Done** | {await sh.getcreaditname(data[4])}")
             news = bot.get_channel(1231652590165426236)
-            await news.send(
-                f"{data[0]} | CH {data[1]} | {role} | **Done**")
-            last_message = None
-            async for message in news.history(limit=1):
-                last_message = message
-
+            last_message = await news.send(f"{data[0]} | CH {data[1]} | {role} | **Done**")
             # Publish the message
             if last_message is not None:
                 await last_message.publish()
-            # if role == "UPD":
-            #    await sh.write(data, "")
-            # else:
-            #    await sh.write(data, "Done")
             await sh.write(data, "Done")
             await sh.delete_row(row_name)  # clear message data
             await remove_reaction(bot, payload.channel_id, payload.message_id, "🥂", False)
-            await asyncio.sleep(120)
             await delete_message(bot, payload.channel_id, payload.message_id)
         elif emoji_repr == "<PartialEmoji animated=False name='❌' id=None>":
             await reactionhelper(data, assignmentlog, "Declined")
