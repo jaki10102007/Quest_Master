@@ -78,6 +78,20 @@ class assignment(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @app_commands.command(name="role")
+
+    @app_commands.describe(role_name="Role name", position="Position in the role hierarchy")
+    async def create_role_example(self, interaction: discord.Interaction, role_name: str, position: int):
+        guild = interaction.guild
+        try:
+            new_role = await guild.create_role(name=role_name, color=discord.Color.darker_grey())
+            roles = guild.roles
+            role_positions = {role: idx for idx, role in enumerate(roles)}
+            role_positions[new_role] = position
+            await guild.edit_role_positions(role_positions)
+            await interaction.response.send_message(f"Role '{role_name}' created successfully at position {position}.")
+        except discord.DiscordException as e:
+            await interaction.response.send_message(f"An error occurred: {e}")
     @app_commands.command(name="assign")
     @app_commands.describe(series="# of the series", chapter="What chapter", role="What needs to be done", who="Who")
     async def assign(self, interaction: discord.Interaction, series: str, chapter: str, role: str, who: str):
@@ -92,7 +106,6 @@ class assignment(commands.Cog):
             first, second = role_dict[role.upper()]
         if first is None:
             await interaction.followup.send(f" '{role.upper()}' is not a valid Role ", ephemeral=True)
-            ## One SHot ##
         if required_role not in member.roles:
 
             message = await target_channel.send(f"{await sh.getsheetname(series)} | CH {chapter} | {role} | {who}")
@@ -102,11 +115,12 @@ class assignment(commands.Cog):
                     f"Oops something went wrong! \nAre you sure that the channel is Inside the Databank?",
                     ephemeral=True)
             # If the sheet is not found, the message will be deleted and the user will be notified
-            await sh.store(message.id, data[0], chapter, who, first, second)
-            await sh.write(data, "Assigned")
-            await interaction.followup.send(content="Assigned")
-            await message.add_reaction("✅")
-            await message.add_reaction("❌")
+            else:
+                await sh.store(message.id, data[0], chapter, who, first, second)
+                await sh.write(data, "Assigned")
+                await interaction.followup.send(content="Assigned")
+                await message.add_reaction("✅")
+                await message.add_reaction("❌")
         else:
             await interaction.followup.send(f"{who} is on Hiatus", ephemeral=True)
 
