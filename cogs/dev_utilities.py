@@ -8,7 +8,7 @@ from logger import setup_logger
 from config import ASSIGNMENT_CHANNEL, ONESHOT_CHANNEL, role_dict
 from datetime import datetime, timedelta
 from config import role_dict_reaction
-
+logger = setup_logger(__name__)
 class dev_utils(commands.Cog):
     def __init__(self, bot):
         self.bot = bot

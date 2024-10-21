@@ -22,7 +22,7 @@ def setup_logger(__name__):
 
     # If you also want to log to console
     console_handler = logging.StreamHandler()
-    console_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    console_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
 

@@ -9,7 +9,7 @@ from google.oauth2 import service_account
 from config import role_dict_reaction
 
 logging.basicConfig(level=logging.INFO, filename='app.log', filemode='w',
-                    format='%(name)s - %(levelname)s - %(message)s')
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 load_dotenv()
