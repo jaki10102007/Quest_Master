@@ -78,20 +78,6 @@ class assignment(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="role")
-
-    @app_commands.describe(role_name="Role name", position="Position in the role hierarchy")
-    async def create_role_example(self, interaction: discord.Interaction, role_name: str, position: int):
-        guild = interaction.guild
-        try:
-            new_role = await guild.create_role(name=role_name, color=discord.Color.darker_grey())
-            roles = guild.roles
-            role_positions = {role: idx for idx, role in enumerate(roles)}
-            role_positions[new_role] = position
-            await guild.edit_role_positions(role_positions)
-            await interaction.response.send_message(f"Role '{role_name}' created successfully at position {position}.")
-        except discord.DiscordException as e:
-            await interaction.response.send_message(f"An error occurred: {e}")
     @app_commands.command(name="assign")
     @app_commands.describe(series="# of the series", chapter="What chapter", role="What needs to be done", who="Who")
     async def assign(self, interaction: discord.Interaction, series: str, chapter: str, role: str, who: str):

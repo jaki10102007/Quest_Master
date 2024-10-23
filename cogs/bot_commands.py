@@ -52,6 +52,7 @@ class BotCommands(commands.Cog):
     @app_commands.command(name="create")
     @app_commands.describe(channelname="Name of the channel", sheet="Name of the sheet")
     async def create(self, interaction: discord.Interaction, channelname: str, sheet: str):
+        await interaction.response.defer(ephemeral=True)
         guild = interaction.guild
         category = self.bot.get_channel(1218035431078236323)
         role_name = sheet
@@ -74,6 +75,9 @@ class BotCommands(commands.Cog):
         channels_positions[channel.id] = new_position
         id = channel.id
         await sh.writechannel(f"<#{channel.id}>", sheet)
+        await interaction.followup.send(
+            f"Succsesfuly created channel {channelname} and role {role_name} and sheet {sheet}",
+            ephemeral=True)
 
     @app_commands.command(name="updatechannelname")
     @app_commands.describe(channel="# of the Channel", new_name="The new name for the sheet")
