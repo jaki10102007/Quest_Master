@@ -52,32 +52,37 @@ class BotCommands(commands.Cog):
     @app_commands.command(name="create")
     @app_commands.describe(channelname="Name of the channel", sheet="Name of the sheet")
     async def create(self, interaction: discord.Interaction, channelname: str, sheet: str):
-        await interaction.response.defer(ephemeral=True)
-        guild = interaction.guild
-        category = self.bot.get_channel(1218035431078236323)
-        role_name = sheet
-        position = 33
-        await sh.copy(sheet) # create sheet
-        new_role = await guild.create_role(name=role_name, color=discord.Color.darker_grey())
-        roles = guild.roles
-        role_positions = {role: idx for idx, role in enumerate(roles)}
-        role_positions[new_role] = position
-        await guild.edit_role_positions(role_positions)
-        overwrites = {
-            guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            new_role: discord.PermissionOverwrite(read_messages=True, send_messages=True)
-        }
-        channel = await guild.create_text_channel(channelname, category=category, overwrites= overwrites) # makes channel
-        new_position = 2  # Define new_position here
-        await channel.edit(position=new_position)
-        channels = sorted(guild.channels, key=lambda c: c.position)
-        channels_positions = {channels[i].id: i for i in range(len(channels))}
-        channels_positions[channel.id] = new_position
-        id = channel.id
-        await sh.writechannel(f"<#{channel.id}>", sheet)
-        await interaction.followup.send(
-            f"Succsesfuly created channel {channelname} and role {role_name} and sheet {sheet}",
-            ephemeral=True)
+        try:
+            await interaction.response.defer(ephemeral=True)
+            guild = interaction.guild
+            category = self.bot.get_channel(1218035431078236323)
+            role_name = sheet
+            position = 33
+            await sh.copy(sheet) # create sheet
+            new_role = await guild.create_role(name=role_name, color=discord.Color.darker_grey())
+            roles = guild.roles
+            role_positions = {role: idx for idx, role in enumerate(roles)}
+            role_positions[new_role] = position
+            await guild.edit_role_positions(role_positions)
+            overwrites = {
+                guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                new_role: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+            }
+            channel = await guild.create_text_channel(channelname, category=category, overwrites= overwrites) # makes channel
+            new_position = 2  # Define new_position here
+            await channel.edit(position=new_position)
+            channels = sorted(guild.channels, key=lambda c: c.position)
+            channels_positions = {channels[i].id: i for i in range(len(channels))}
+            channels_positions[channel.id] = new_position
+            id = channel.id
+            await sh.writechannel(f"<#{channel.id}>", sheet)
+            await interaction.followup.send(
+                f"Succsesfuly created channel {channelname} and role {role_name} and sheet {sheet}",
+                ephemeral=True)
+        except:
+            await interaction.followup.send(
+                f"Failed to create channel {channelname} and role and sheet {sheet}",
+                ephemeral=True)
 
     @app_commands.command(name="updatechannelname")
     @app_commands.describe(channel="# of the Channel", new_name="The new name for the sheet")
